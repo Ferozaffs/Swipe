@@ -8,7 +8,8 @@ namespace Swipe_Core
 public class CurveCollector
 {
     public event Action<string, float, int>? OnUpdated;
-    public event Action<string, List<float>>? OnDetect;
+    public event Action<Dictionary<string, List<float>>>? OnDetect;
+    public event Action<bool>? OnStatus;
 
     private Dictionary<string, ConcurrentQueue<float>> _values = new Dictionary<string, ConcurrentQueue<float>>();
     private Dictionary<string, int> _dataIndex = new Dictionary<string, int>();
@@ -120,6 +121,7 @@ public class CurveCollector
                     {
                         _anomalyDetected = true;
                         _dataCount = 0;
+                        OnStatus?.Invoke(true);
                         Debug.WriteLine("Anomaly detected");
                     }
 
@@ -151,6 +153,7 @@ public class CurveCollector
                     Debug.WriteLine("Rest detected");
                     Debug.WriteLine("Num sample: " + _dataCount);
                     _anomalyDetected = false;
+                    OnStatus?.Invoke(false);
                     SaveDetectedCurve();
                 }
             }
@@ -167,9 +170,9 @@ public class CurveCollector
                 var index = Math.Max(0, pair.Value.Count - _dataCount + i);
                 _detectedCurve[pair.Key].Add(pair.Value.ElementAt(index));
             }
-
-            OnDetect?.Invoke(pair.Key, _detectedCurve[pair.Key]);
         }
+
+        OnDetect?.Invoke(_detectedCurve);
     }
 }
 }
