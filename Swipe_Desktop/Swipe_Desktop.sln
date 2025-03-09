@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34728.123
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Swipe_Application", "Swipe_Application\Swipe_Application.csproj", "{E33530D0-180A-4BE0-A73D-C1D7E83F5016}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Swipe_Core", "Swipe_Core\Swipe_Core.csproj", "{2FB8EF0D-5F2D-408B-B627-D7881ED22991}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E33530D0-180A-4BE0-A73D-C1D7E83F5016}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E33530D0-180A-4BE0-A73D-C1D7E83F5016}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E33530D0-180A-4BE0-A73D-C1D7E83F5016}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E33530D0-180A-4BE0-A73D-C1D7E83F5016}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2FB8EF0D-5F2D-408B-B627-D7881ED22991}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FB8EF0D-5F2D-408B-B627-D7881ED22991}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2FB8EF0D-5F2D-408B-B627-D7881ED22991}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2FB8EF0D-5F2D-408B-B627-D7881ED22991}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {386E0148-6832-4690-ADE4-8318887C3EAE}
+	EndGlobalSection
+EndGlobal
