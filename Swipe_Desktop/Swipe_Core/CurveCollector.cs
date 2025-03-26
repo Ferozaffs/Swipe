@@ -2,6 +2,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text.Json;
+using System.Xml.Linq;
 
 namespace Swipe_Core
 {
@@ -25,6 +27,8 @@ public class CurveCollector
     private int _anomalySamplesRequired = 10;
 
     Dictionary<string, List<float>> _detectedCurve = new Dictionary<string, List<float>>();
+
+    private bool _serializeCurves = false;
 
     public CurveCollector(IDataReader reader)
     {
@@ -172,7 +176,31 @@ public class CurveCollector
             }
         }
 
+        if (_serializeCurves)
+        {
+            Serialize();
+        }
+
         OnDetect?.Invoke(_detectedCurve);
+    }
+
+    private void Serialize()
+    {
+        string json = JsonSerializer.Serialize(_values, new JsonSerializerOptions { WriteIndented = true });
+
+        DateTime currentTime = DateTime.UtcNow;
+        long unixTime = ((DateTimeOffset)currentTime).ToUnixTimeSeconds();
+        var filename = "curves_" + unixTime.ToString() + ".json";
+        File.WriteAllText(filename, json);
+    }
+
+    public bool IsSeralizing()
+    {
+        return _serializeCurves;
+    }
+    public void ToggleSeralizing()
+    {
+        _serializeCurves = !_serializeCurves;
     }
 }
 }

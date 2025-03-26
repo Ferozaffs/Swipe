@@ -36,6 +36,7 @@
                 FontSize="20"
                 Foreground="Gray"
                 Text="Detected curves:" />
+            <Button x:Name="SeralizeButton" Content="Start serialize" Width="100" HorizontalAlignment="Left" Margin="5" Click="SeralizeButton_Click"/>
         </StackPanel>
         <Canvas Height="2" Background="#333333" />
         <StackPanel

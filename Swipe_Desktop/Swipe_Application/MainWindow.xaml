@@ -20,7 +20,7 @@
                 Width="Auto"
                 Height="50"
                 Background="#333333" />
-            <local:GraphView />
+            <local:GraphView x:Name="GraphViewControl"/>
         </StackPanel>
     </Grid>
 </Window>

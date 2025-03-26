@@ -6,6 +6,8 @@ using System.Windows.Controls;
 using System.Windows;
 using System.Windows.Media;
 using Windows.UI.ViewManagement;
+using Windows.Networking.BackgroundTransfer;
+using System.ComponentModel;
 
 namespace Swipe_Application
 {
@@ -13,6 +15,8 @@ public partial class GraphView : UserControl
 {
     private List<SeriesCollection> _seriesList = new List<SeriesCollection>();
     private int _downSampleRate = 10;
+
+    private CurveCollector? _collector = null;
 
     public GraphView()
     {
@@ -32,9 +36,20 @@ public partial class GraphView : UserControl
         var mainWindow = FindParent<MainWindow>(this);
         if (mainWindow != null)
         {
-            mainWindow.CurveCollector.OnUpdated += UpdateGraphs;
-            mainWindow.CurveCollector.OnDetect += UpdateDetectGraphs;
-            mainWindow.CurveCollector.OnStatus += UpdateDeviceStatus;
+            _collector = mainWindow.CurveCollector;
+            _collector.OnUpdated += UpdateGraphs;
+            _collector.OnDetect += UpdateDetectGraphs;
+            _collector.OnStatus += UpdateDeviceStatus;
+        }
+    }
+
+    public void Unload()
+    {
+        if (_collector != null)
+        {
+            _collector.OnUpdated -= UpdateGraphs;
+            _collector.OnDetect -= UpdateDetectGraphs;
+            _collector.OnStatus -= UpdateDeviceStatus;
         }
     }
 
@@ -77,9 +92,9 @@ public partial class GraphView : UserControl
         this.Dispatcher.Invoke(
             () =>
             {
-                if (DetectPanel.Children.Count > 1)
+                if (DetectPanel.Children.Count > 2)
                 {
-                    DetectPanel.Children.RemoveAt(1);
+                    DetectPanel.Children.RemoveAt(2);
                 }
 
                 StackPanel stackPanel = new StackPanel { Orientation = Orientation.Horizontal,
@@ -155,6 +170,18 @@ public partial class GraphView : UserControl
         chart.AxisY.Add(yAxis);
 
         return chart;
+    }
+
+    private void SeralizeButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_collector != null)
+        {
+            if (sender is Button btn)
+            {
+                _collector.ToggleSeralizing();
+                btn.Content = _collector.IsSeralizing() ? "Serializing..." : "Serialize";
+            }
+        }
     }
 }
 }

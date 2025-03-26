@@ -31,6 +31,9 @@ public partial class MainWindow : Window
     }
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
+        GraphViewControl.Unload();
+
+        _btReader?.Stop();
         _comReader?.StopCom();
     }
 }

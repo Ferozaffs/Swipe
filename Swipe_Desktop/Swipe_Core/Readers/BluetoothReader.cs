@@ -10,6 +10,7 @@ public class BluetoothReader : IDataReader
     public event Action<string>? OnUpdated;
 
     private bool _isMonitoring;
+    private bool _stopped = false;
 
     public async Task<bool> Initialize()
     {
@@ -24,6 +25,11 @@ public class BluetoothReader : IDataReader
         return false;
     }
 
+    public void Stop()
+    {
+        _stopped = true;
+    }
+
     private async Task MonitorDevice(BluetoothLEDevice device)
     {
         var connectionTries = 0;
@@ -36,7 +42,7 @@ public class BluetoothReader : IDataReader
                 connectionTries++;
             }
 
-            while (device.ConnectionStatus == BluetoothConnectionStatus.Connected)
+            while (device.ConnectionStatus == BluetoothConnectionStatus.Connected && _stopped == false)
             {
                 connectionTries = 0;
                 await ReadDeviceData(device);
