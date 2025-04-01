@@ -1,24 +1,29 @@
 ﻿using Swipe_Core.Readers;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.Json;
-using System.Xml.Linq;
 
 namespace Swipe_Core
 {
 public class CurveCollector
 {
+    public enum Status
+    {
+        Calibrating,
+        Idle,
+        Anomaly
+    }
+
     public event Action<string, float, int>? OnUpdated;
     public event Action<Dictionary<string, List<float>>>? OnDetect;
-    public event Action<bool>? OnStatus;
+    public event Action<Status>? OnStatus;
 
     private Dictionary<string, ConcurrentQueue<float>> _values = new Dictionary<string, ConcurrentQueue<float>>();
     private Dictionary<string, int> _dataIndex = new Dictionary<string, int>();
     private Dictionary<string, (float, float)> _deadzones = new Dictionary<string, (float, float)>();
     private Dictionary<string, float> _deadzoneMultipliers = new Dictionary<string, float>();
 
-    private bool _warmup = true;
+    private bool _calibrating = true;
     private int _dataCount = 0;
     private int _dataWindow = 500;
 
@@ -53,13 +58,15 @@ public class CurveCollector
     {
         StoreData(data);
 
-        if (_warmup)
+        if (_calibrating)
         {
+            OnStatus?.Invoke(Status.Calibrating);
             _dataCount++;
             if (_dataCount >= _dataWindow)
             {
-                _warmup = false;
+                _calibrating = false;
                 SetDeadZone();
+                OnStatus?.Invoke(Status.Idle);
             }
         }
         else
@@ -125,7 +132,7 @@ public class CurveCollector
                     {
                         _anomalyDetected = true;
                         _dataCount = 0;
-                        OnStatus?.Invoke(true);
+                        OnStatus?.Invoke(Status.Anomaly);
                         Debug.WriteLine("Anomaly detected");
                     }
 
@@ -157,7 +164,7 @@ public class CurveCollector
                     Debug.WriteLine("Rest detected");
                     Debug.WriteLine("Num sample: " + _dataCount);
                     _anomalyDetected = false;
-                    OnStatus?.Invoke(false);
+                    OnStatus?.Invoke(Status.Idle);
                     SaveDetectedCurve();
                 }
             }
@@ -201,6 +208,11 @@ public class CurveCollector
     public void ToggleSeralizing()
     {
         _serializeCurves = !_serializeCurves;
+    }
+
+    public void Recalibrate()
+    {
+        _calibrating = true;
     }
 }
 }

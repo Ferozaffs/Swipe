@@ -1,3 +1,12 @@
+//#define DEBUG
+
+#ifdef DEBUG
+  #define DEBUG_PRINT(x) Serial.print(x)
+  #define DEBUG_PRINTLN(x) Serial.println(x)
+#else
+  #define DEBUG_PRINT(x)
+  #define DEBUG_PRINTLN(x)
+#endif
 
 #include <CodeCell.h>
 #include <ArduinoBLE.h>
@@ -8,14 +17,17 @@ BLEService bleService("156F");
 BLEStringCharacteristic bleCharacteristic("2C19", BLERead | BLENotify, 96);
 
 void setup() {
-  Serial.begin(115200);
+#ifdef DEBUG
+    Serial.begin(115200);
+#endif
+
 
   cell.Init(MOTION_LINEAR_ACC + LIGHT); 
 
-  Serial.println("Cell: started");
+  DEBUG_PRINTLN("Cell: started");
 
   if (!BLE.begin()) {
-    Serial.println("BT: failed to initialize BLE!");
+    DEBUG_PRINTLN("BT: failed to initialize BLE!");
     while (1) {
       cell.LED(0x05, 0, 0);
     }
@@ -29,7 +41,7 @@ void setup() {
 
   BLE.advertise();
 
-  Serial.println("BT: advertising");
+  DEBUG_PRINTLN("BT: advertising");
 }
 
 void loop() {
@@ -37,8 +49,8 @@ void loop() {
 
   BLEDevice central = BLE.central();
   if (central) {
-    Serial.print("BT: connected to central: ");
-    Serial.println(central.address());
+    DEBUG_PRINT("BT: connected to central: ");
+    DEBUG_PRINTLN(central.address());
 
     while (central.connected()) {
       epochTime = millis() / 1000;
@@ -54,15 +66,15 @@ void loop() {
         float y = 0.0;
         float z = 0.0;
         cell.Motion_LinearAccRead(x, y, z);
-        uint16_t proximity = cell.Light_ProximityRead();
+        float proximity = cell.Light_ProximityRead() * 0.002;
         
         String data = ">LinAccel_x:" + String(x) + "," + ">LinAccel_y:" + String(y) + "," + ">LinAccel_z:" + String(z) + "," + ">Proximity:" + proximity;
         bleCharacteristic.writeValue(data); 
       }
     }
 
-    Serial.print("BT: disconnected from central: ");
-    Serial.println(central.address()); 
+    DEBUG_PRINT("BT: disconnected from central: ");
+    DEBUG_PRINTLN(central.address()); 
   }
 
   if(epochTime % 10 == 0) {

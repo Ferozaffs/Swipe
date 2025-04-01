@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DTWTester": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Users\\anton\\repos\\Swipe\\Swipe_Desktop\\TestData\\DownUp\\curves_1743021301.json\" \"C:\\Users\\anton\\repos\\Swipe\\Swipe_Desktop\\TestData\\RightLeft\""
+    }
+  }
+}

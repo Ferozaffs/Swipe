@@ -15,12 +15,21 @@
             FontSize="20"
             Foreground="Gray"
             Text="Device input:" />
-        <TextBlock
-            x:Name="DeviceStatus"
-            Margin="5"
-            FontSize="14"
-            Foreground="Green"
-            Text="Status: Idle" />
+        <WrapPanel>
+            <Button
+                x:Name="RecalibrateButton"
+                Width="100"
+                Margin="5"
+                HorizontalAlignment="Left"
+                Click="RecalibrateButton_Click"
+                Content="Recalibrate" />
+            <TextBlock
+                x:Name="DeviceStatus"
+                Margin="5"
+                FontSize="14"
+                Foreground="Green"
+                Text="Status: Idle" />
+        </WrapPanel>
         <StackPanel
             x:Name="InputPanel"
             Height="150"
@@ -29,14 +38,20 @@
         <Canvas Height="2" Background="#333333" />
         <StackPanel
             x:Name="DetectPanel"
-            Height="150"
+            Height="200"
             HorizontalAlignment="Stretch">
             <TextBlock
                 Margin="5"
                 FontSize="20"
                 Foreground="Gray"
                 Text="Detected curves:" />
-            <Button x:Name="SeralizeButton" Content="Start serialize" Width="100" HorizontalAlignment="Left" Margin="5" Click="SeralizeButton_Click"/>
+            <Button
+                x:Name="SeralizeButton"
+                Width="100"
+                Margin="5"
+                HorizontalAlignment="Left"
+                Click="SeralizeButton_Click"
+                Content="Start serialize" />
         </StackPanel>
         <Canvas Height="2" Background="#333333" />
         <StackPanel

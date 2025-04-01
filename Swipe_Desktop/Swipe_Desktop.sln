@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Swipe_Application", "Swipe_Application\Swipe_Application.csproj", "{E33530D0-180A-4BE0-A73D-C1D7E83F5016}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Swipe_Application", "Swipe_Application\Swipe_Application.csproj", "{E33530D0-180A-4BE0-A73D-C1D7E83F5016}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Swipe_Core", "Swipe_Core\Swipe_Core.csproj", "{2FB8EF0D-5F2D-408B-B627-D7881ED22991}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Swipe_Core", "Swipe_Core\Swipe_Core.csproj", "{2FB8EF0D-5F2D-408B-B627-D7881ED22991}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DTWTester", "DTWTester\DTWTester.csproj", "{9970456D-EA0D-4477-908C-31BD667FDBD1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{2FB8EF0D-5F2D-408B-B627-D7881ED22991}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2FB8EF0D-5F2D-408B-B627-D7881ED22991}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2FB8EF0D-5F2D-408B-B627-D7881ED22991}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9970456D-EA0D-4477-908C-31BD667FDBD1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9970456D-EA0D-4477-908C-31BD667FDBD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9970456D-EA0D-4477-908C-31BD667FDBD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9970456D-EA0D-4477-908C-31BD667FDBD1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
