@@ -7,14 +7,14 @@ using System.Windows.Media;
 
 namespace Swipe_Application
 {
-public partial class GraphView : UserControl
+public partial class DataView : UserControl
 {
     private List<SeriesCollection> _seriesList = new List<SeriesCollection>();
     private int _downSampleRate = 10;
 
     private CurveCollector? _collector = null;
 
-    public GraphView()
+    public DataView()
     {
         InitializeComponent();
         Loaded += OnLoaded;
@@ -29,13 +29,12 @@ public partial class GraphView : UserControl
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        var mainWindow = FindParent<MainWindow>(this);
+        var mainWindow = Utils.FindParent<MainWindow>(this);
         if (mainWindow != null)
         {
             _collector = mainWindow.CurveCollector;
             _collector.OnUpdated += UpdateGraphs;
             _collector.OnDetect += UpdateDetectGraphs;
-            _collector.OnStatus += UpdateDeviceStatus;
         }
     }
 
@@ -45,26 +44,9 @@ public partial class GraphView : UserControl
         {
             _collector.OnUpdated -= UpdateGraphs;
             _collector.OnDetect -= UpdateDetectGraphs;
-            _collector.OnStatus -= UpdateDeviceStatus;
         }
     }
 
-    private T? FindParent<T>(DependencyObject child)
-        where T : DependencyObject
-    {
-        DependencyObject parent = VisualTreeHelper.GetParent(child);
-
-        while (parent != null)
-        {
-            if (parent is T)
-            {
-                return (T)parent;
-            }
-            parent = VisualTreeHelper.GetParent(parent);
-        }
-
-        return null;
-    }
     private void UpdateGraphs(string key, float value, int index)
     {
         this.Dispatcher.Invoke(() =>
@@ -88,9 +70,9 @@ public partial class GraphView : UserControl
         this.Dispatcher.Invoke(
             () =>
             {
-                if (DetectPanel.Children.Count > 2)
+                if (DetectPanel.Children.Count > 1)
                 {
-                    DetectPanel.Children.RemoveAt(2);
+                    DetectPanel.Children.RemoveAt(1);
                 }
 
                 StackPanel stackPanel = new StackPanel { Orientation = Orientation.Horizontal,
@@ -121,28 +103,6 @@ public partial class GraphView : UserControl
             });
     }
 
-    private void UpdateDeviceStatus(CurveCollector.Status status)
-    {
-        this.Dispatcher.Invoke(() =>
-                               {
-                                   if (status == CurveCollector.Status.Anomaly)
-                                   {
-                                       DeviceStatus.Text = "Status: Anomaly";
-                                       DeviceStatus.Foreground = new SolidColorBrush(Colors.Red);
-                                   }
-                                   else if (status == CurveCollector.Status.Calibrating)
-                                   {
-                                       DeviceStatus.Text = "Status: Calibrating";
-                                       DeviceStatus.Foreground = new SolidColorBrush(Colors.Yellow);
-                                   }
-                                   else
-                                   {
-                                       DeviceStatus.Text = "Status: Idle";
-                                       DeviceStatus.Foreground = new SolidColorBrush(Colors.Green);
-                                   }
-                               });
-    }
-
     private CartesianChart CreateGraph(string title, float max, float min, Color color, bool showLabels, bool temporary)
     {
         var sc = new SeriesCollection { new LineSeries { Title = title, Values = new ChartValues<float>(new float[100]),
@@ -171,26 +131,6 @@ public partial class GraphView : UserControl
         chart.AxisY.Add(yAxis);
 
         return chart;
-    }
-
-    private void SeralizeButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_collector != null)
-        {
-            if (sender is Button btn)
-            {
-                _collector.ToggleSeralizing();
-                btn.Content = _collector.IsSeralizing() ? "Serializing..." : "Serialize";
-            }
-        }
-    }
-
-    private void RecalibrateButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_collector != null)
-        {
-            _collector.Recalibrate();
-        }
     }
 }
 }

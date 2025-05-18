@@ -165,13 +165,13 @@ public class CurveCollector
                     Debug.WriteLine("Num sample: " + _dataCount);
                     _anomalyDetected = false;
                     OnStatus?.Invoke(Status.Idle);
-                    SaveDetectedCurve();
+                    HandleDetectedCurve();
                 }
             }
         }
     }
 
-    private void SaveDetectedCurve()
+    private void HandleDetectedCurve()
     {
         foreach (var pair in _values)
         {
@@ -213,6 +213,7 @@ public class CurveCollector
     public void Recalibrate()
     {
         _calibrating = true;
+        _dataCount = 0;
     }
 }
 }

@@ -1,0 +1,158 @@
+﻿<UserControl
+    x:Class="Swipe_Application.FunctionView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Swipe_Application"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <StackPanel x:Name="FunctionsPanel" HorizontalAlignment="Stretch">
+        <WrapPanel>
+            <TextBlock
+                Margin="5"
+                FontSize="20"
+                Foreground="Gray"
+                Text="Functions" />
+            <Button
+                x:Name="CreateFunctBtn"
+                Margin="10,0,0,0"
+                Click="CreateFunctBtn_Click"
+                Content="➕"
+                Style="{StaticResource FlatDarkButton}" />
+        </WrapPanel>
+
+        <Grid Background="#111111">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="36" />
+                <ColumnDefinition Width="256" />
+                <ColumnDefinition Width="256" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                Grid.Column="1"
+                FontSize="14"
+                Foreground="Gray"
+                Text="Name" />
+            <TextBlock
+                Grid.Column="2"
+                FontSize="14"
+                Foreground="Gray"
+                Text="Function" />
+            <TextBlock
+                Grid.Column="3"
+                FontSize="14"
+                Foreground="Gray"
+                Text="Details" />
+        </Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Grid Margin="0,5,0,5" Background="#333333">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="36" />
+                    <ColumnDefinition Width="256" />
+                    <ColumnDefinition Width="256" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel x:Name="FunctionDeleteColumn" Grid.Column="0" />
+                <StackPanel x:Name="FunctionNameColumn" Grid.Column="1" />
+                <StackPanel x:Name="FunctionFuncColumn" Grid.Column="2" />
+                <StackPanel x:Name="FunctionDetailsColumn" Grid.Column="3" />
+            </Grid>
+        </ScrollViewer>
+        <Canvas Height="2" Background="#333333" />
+
+        <StackPanel
+            x:Name="DetailsPanel"
+            Height="200"
+            HorizontalAlignment="Stretch">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="450" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock
+                        Margin="5"
+                        FontSize="20"
+                        Foreground="Gray"
+                        Text="Function" />
+                    <WrapPanel>
+                        <TextBlock
+                            Width="50"
+                            Margin="5"
+                            FontSize="14"
+                            Foreground="Gray"
+                            Text="Name:" />
+                        <TextBox
+                            Width="350"
+                            Margin="5"
+                            Background="Gray"
+                            FontSize="14"
+                            IsEnabled="False"
+                            Text="" />
+                    </WrapPanel>
+                    <WrapPanel>
+                        <TextBlock
+                            Width="50"
+                            Margin="5"
+                            FontSize="14"
+                            Foreground="Gray"
+                            Text="Type:" />
+                        <ComboBox
+                            Width="350"
+                            Margin="5"
+                            Background="Gray"
+                            BorderThickness="0"
+                            IsEnabled="False" />
+                    </WrapPanel>
+                    <WrapPanel>
+                        <TextBlock
+                            Width="50"
+                            Margin="5"
+                            FontSize="14"
+                            Foreground="Gray"
+                            Text="Script:" />
+                        <TextBox
+                            Width="350"
+                            Height="90"
+                            Margin="5"
+                            AcceptsReturn="True"
+                            Background="Gray"
+                            FontSize="12"
+                            HorizontalScrollBarVisibility="Auto"
+                            IsEnabled="False"
+                            Text=""
+                            VerticalScrollBarVisibility="Auto" />
+                    </WrapPanel>
+                </StackPanel>
+                <StackPanel Grid.Column="1">
+                    <TextBlock
+                        Margin="5"
+                        FontSize="20"
+                        Foreground="Gray"
+                        Text="Usage" />
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+        <Canvas Height="2" Background="#333333" />
+        <StackPanel
+            x:Name="RecordsPanel"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch">
+            <WrapPanel>
+                <TextBlock
+                    Margin="5"
+                    FontSize="20"
+                    Foreground="Gray"
+                    Text="Recordings" />
+                <Button
+                    x:Name="RecordButton"
+                    Margin="10,0,0,0"
+                    Click="RecordButton_Click"
+                    Content="⬤"
+                    Style="{StaticResource FlatDarkButton}" />
+            </WrapPanel>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

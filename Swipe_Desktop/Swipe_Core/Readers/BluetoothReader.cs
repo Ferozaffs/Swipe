@@ -2,24 +2,35 @@
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Storage.Streams;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Swipe_Core.Readers
 {
 public class BluetoothReader : IDataReader
 {
     public event Action<string>? OnUpdated;
+    public event Action<bool>? OnConnection;
 
-    private bool _isMonitoring;
+    public bool IsMonitoring;
     private bool _stopped = false;
 
     public async Task<bool> Initialize()
     {
-        var device = await BluetoothHelper.FindDevice();
-        if (device != null)
+        return await Connect();
+    }
+
+    public async Task<bool> Connect()
+    {
+        if (IsMonitoring == false)
         {
-            _isMonitoring = true;
-            MonitorDevice(device);
-            return true;
+            var device = await BluetoothHelper.FindDevice();
+            if (device != null)
+            {
+                IsMonitoring = true;
+                OnConnection?.Invoke(IsMonitoring);
+                MonitorDevice(device);
+                return true;
+            }
         }
 
         return false;
@@ -33,7 +44,7 @@ public class BluetoothReader : IDataReader
     private async Task MonitorDevice(BluetoothLEDevice device)
     {
         var connectionTries = 0;
-        while (_isMonitoring)
+        while (IsMonitoring)
         {
             if (device.ConnectionStatus == BluetoothConnectionStatus.Disconnected)
             {
@@ -48,11 +59,12 @@ public class BluetoothReader : IDataReader
                 await ReadDeviceData(device);
             }
 
-            Thread.Sleep(5000);
-            if (connectionTries >= 5)
+            Thread.Sleep(1000);
+            if (connectionTries >= 3)
             {
                 Debug.WriteLine("Exceeded connection attempts...");
-                _isMonitoring = false;
+                IsMonitoring = false;
+                OnConnection?.Invoke(IsMonitoring);
             }
         }
     }
@@ -83,12 +95,12 @@ public class BluetoothReader : IDataReader
                             await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
                                 GattClientCharacteristicConfigurationDescriptorValue.Notify);
 
-                            while ((DateTime.Now - lastUpdateTime).TotalSeconds < 30)
+                            while ((DateTime.Now - lastUpdateTime).TotalSeconds < 5)
                             {
                                 await Task.Delay(1000);
                             }
 
-                            Debug.WriteLine("No data received for 30 seconds. Exiting...");
+                            Debug.WriteLine("No data received for 5 seconds. Exiting...");
                             return;
                         }
                     }
