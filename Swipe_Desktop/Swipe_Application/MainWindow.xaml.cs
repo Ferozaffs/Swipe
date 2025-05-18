@@ -12,6 +12,7 @@ namespace Swipe_Application
 public partial class MainWindow : Window
 {
     public CurveCollector CurveCollector { get; }
+    public FunctionManager FunctionManager { get; }
     // private COMReader? _comReader;
     private BluetoothReader? _btReader;
 
@@ -32,6 +33,8 @@ public partial class MainWindow : Window
         CurveCollector.AddKeyValueTracker(">Proximity", 5000.0f);
 
         CurveCollector.OnStatus += UpdateDeviceStatus;
+
+        FunctionManager = new FunctionManager(CurveCollector);
     }
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
@@ -80,7 +83,10 @@ public partial class MainWindow : Window
 
     private void ConnectionBtn_Click(object sender, RoutedEventArgs e)
     {
-        _btReader.Connect();
+        if (_btReader != null)
+        {
+            _btReader.Connect();
+        }
     }
 
     private void UpdateConnectionStatus(bool connectionStatus)

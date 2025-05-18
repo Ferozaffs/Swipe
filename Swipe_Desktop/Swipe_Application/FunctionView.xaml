@@ -27,7 +27,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="36" />
                 <ColumnDefinition Width="256" />
-                <ColumnDefinition Width="256" />
+                <ColumnDefinition Width="128" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <TextBlock
@@ -56,7 +56,7 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel x:Name="FunctionDeleteColumn" Grid.Column="0" />
                 <StackPanel x:Name="FunctionNameColumn" Grid.Column="1" />
-                <StackPanel x:Name="FunctionFuncColumn" Grid.Column="2" />
+                <StackPanel x:Name="FunctionTypeColumn" Grid.Column="2" />
                 <StackPanel x:Name="FunctionDetailsColumn" Grid.Column="3" />
             </Grid>
         </ScrollViewer>
@@ -64,7 +64,7 @@
 
         <StackPanel
             x:Name="DetailsPanel"
-            Height="200"
+            Height="250"
             HorizontalAlignment="Stretch">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -83,8 +83,24 @@
                             Margin="5"
                             FontSize="14"
                             Foreground="Gray"
+                            Text="Enabled:" />
+                        <CheckBox
+                            x:Name="FuncEnabledCheck"
+                            Width="350"
+                            Margin="5,8,5,10"
+                            Background="Gray"
+                            IsChecked="True"
+                            IsEnabled="False" />
+                    </WrapPanel>
+                    <WrapPanel>
+                        <TextBlock
+                            Width="50"
+                            Margin="5"
+                            FontSize="14"
+                            Foreground="Gray"
                             Text="Name:" />
                         <TextBox
+                            x:Name="FuncNameTextBox"
                             Width="350"
                             Margin="5"
                             Background="Gray"
@@ -100,6 +116,7 @@
                             Foreground="Gray"
                             Text="Type:" />
                         <ComboBox
+                            x:Name="FuncTypeCombo"
                             Width="350"
                             Margin="5"
                             Background="Gray"
@@ -114,6 +131,7 @@
                             Foreground="Gray"
                             Text="Script:" />
                         <TextBox
+                            x:Name="FuncCommandTextBox"
                             Width="350"
                             Height="90"
                             Margin="5"
