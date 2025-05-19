@@ -8,6 +8,7 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
+
     <StackPanel x:Name="FunctionsPanel" HorizontalAlignment="Stretch">
         <WrapPanel>
             <TextBlock
@@ -44,14 +45,14 @@
                 Grid.Column="3"
                 FontSize="14"
                 Foreground="Gray"
-                Text="Details" />
+                Text="Command" />
         </Grid>
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <ScrollViewer MaxHeight="200" VerticalScrollBarVisibility="Auto">
             <Grid Margin="0,5,0,5" Background="#333333">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="36" />
                     <ColumnDefinition Width="256" />
-                    <ColumnDefinition Width="256" />
+                    <ColumnDefinition Width="128" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <StackPanel x:Name="FunctionDeleteColumn" Grid.Column="0" />
@@ -88,9 +89,11 @@
                             x:Name="FuncEnabledCheck"
                             Width="350"
                             Margin="5,8,5,10"
-                            Background="Gray"
+                            Background="LightGray"
+                            Checked="FuncEnabledCheck_Checked"
                             IsChecked="True"
-                            IsEnabled="False" />
+                            IsEnabled="False"
+                            Unchecked="FuncEnabledCheck_Unchecked" />
                     </WrapPanel>
                     <WrapPanel>
                         <TextBlock
@@ -103,10 +106,12 @@
                             x:Name="FuncNameTextBox"
                             Width="350"
                             Margin="5"
-                            Background="Gray"
+                            Background="#333333"
                             FontSize="14"
+                            Foreground="LightGray"
                             IsEnabled="False"
-                            Text="" />
+                            Text=""
+                            TextChanged="FuncNameTextBox_TextChanged" />
                     </WrapPanel>
                     <WrapPanel>
                         <TextBlock
@@ -119,9 +124,10 @@
                             x:Name="FuncTypeCombo"
                             Width="350"
                             Margin="5"
-                            Background="Gray"
+                            Background="#333333"
                             BorderThickness="0"
-                            IsEnabled="False" />
+                            IsEnabled="False"
+                            SelectionChanged="FuncTypeCombo_SelectionChanged" />
                     </WrapPanel>
                     <WrapPanel>
                         <TextBlock
@@ -136,11 +142,13 @@
                             Height="90"
                             Margin="5"
                             AcceptsReturn="True"
-                            Background="Gray"
+                            Background="#333333"
                             FontSize="12"
+                            Foreground="LightGray"
                             HorizontalScrollBarVisibility="Auto"
                             IsEnabled="False"
                             Text=""
+                            TextChanged="FuncCommandTextBox_TextChanged"
                             VerticalScrollBarVisibility="Auto" />
                     </WrapPanel>
                 </StackPanel>

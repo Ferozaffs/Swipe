@@ -1,4 +1,6 @@
-﻿namespace Swipe_Core
+﻿using System.Linq;
+
+namespace Swipe_Core
 {
 public class FunctionManager
 {
@@ -24,8 +26,7 @@ public class FunctionManager
 
     public void LoadFunctions()
     {
-        string exePath = AppDomain.CurrentDomain.BaseDirectory;
-        DirectoryInfo dir = new DirectoryInfo(Path.Combine(exePath, "Functions"));
+        DirectoryInfo dir = new DirectoryInfo("Functions");
         if (dir.Exists)
         {
             foreach (var file in dir.GetFiles("*.json"))
@@ -34,11 +35,17 @@ public class FunctionManager
                 if (func != null)
                 {
                     _functions.Add(func);
+                    _functions.Last().OnFunctionChange += FunctionManager_OnFunctionChange;
                 }
             }
 
             OnFunctionChange?.Invoke(_functions);
         }
+    }
+
+    private void FunctionManager_OnFunctionChange(Function obj)
+    {
+        OnFunctionChange?.Invoke(_functions);
     }
 
     public List<Function> GetFunctions()
@@ -55,6 +62,7 @@ public class FunctionManager
     {
         var func = new Function();
         _functions.Add(func);
+        _functions.Last().OnFunctionChange += FunctionManager_OnFunctionChange;
         OnFunctionChange?.Invoke(_functions);
 
         return func;
@@ -62,6 +70,8 @@ public class FunctionManager
 
     public void RemoveFunction(int index)
     {
+        _functions.ElementAt(index).Remove();
+        _functions.ElementAt(index).OnFunctionChange -= FunctionManager_OnFunctionChange;
         _functions.RemoveAt(index);
         OnFunctionChange?.Invoke(_functions);
     }

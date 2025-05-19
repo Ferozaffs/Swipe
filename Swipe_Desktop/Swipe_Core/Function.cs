@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Management.Automation;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Swipe_Core
 {
@@ -13,26 +14,62 @@ public class Function
         Launch,
     }
 
-    public bool IsEnabled = true;
-    public string Name = "New Function";
-    public FunctionType FuncType = FunctionType.Powershell;
-    public List<Dictionary<string, List<float>>> Recordings = new List<Dictionary<string, List<float>>>();
+    public event Action<Function>? OnFunctionChange;
 
-    private string _command = "";
+    [JsonInclude]
+    public bool IsEnabled { get; private set; } = true;
+    [JsonInclude]
+    public string Name { get; private set; } = "New Function";
+    [JsonInclude]
+    public FunctionType FuncType { get; private set; } = FunctionType.Powershell;
+    [JsonInclude]
+    public string Command { get; private set; } = "";
+    [JsonInclude]
+    public List<Dictionary<string, List<float>>> Recordings { get; private set; } =
+        new List<Dictionary<string, List<float>>>();
 
+    public void Enable()
+    {
+        IsEnabled = true;
+        Save();
+    }
+
+    public void Disable()
+    {
+        IsEnabled = false;
+        Save();
+    }
+
+    public void SetName(string name)
+    {
+        var filename = @"Functions\" + Name.Replace(" ", "_") + ".json";
+        File.Delete(filename);
+
+        Name = name;
+        Save();
+    }
+
+    public void SetFunctionType(FunctionType funcType)
+    {
+        FuncType = funcType;
+        Save();
+    }
     public void SetPowershellCommand(string command)
     {
-        _command = command;
+        Command = command;
+        Save();
     }
 
     public void SetExe(string exe)
     {
-        _command = exe;
+        Command = exe;
+        Save();
     }
 
-    public string GetDetails()
+    public void AddRecording(Dictionary<string, List<float>> recording)
     {
-        return _command;
+        Recordings.Add(recording);
+        Save();
     }
 
     public void RunFunction()
@@ -46,19 +83,19 @@ public class Function
             case FunctionType.Powershell:
                 using (PowerShell PowerShellInstance = PowerShell.Create())
                 {
-                    PowerShellInstance.AddScript(_command);
+                    PowerShellInstance.AddScript(Command);
                     IAsyncResult result = PowerShellInstance.BeginInvoke();
                 }
                 break;
             case FunctionType.Launch:
                 ProcessStartInfo start = new ProcessStartInfo();
-                start.FileName = _command;
+                start.FileName = Command;
                 Process.Start(start);
                 break;
             }
         }
     }
-    public bool Save()
+    private bool Save()
     {
         if (Name.Length == 0 || Name == "New Function")
         {
@@ -70,12 +107,28 @@ public class Function
         var filename = @"Functions\" + Name.Replace(" ", "_") + ".json";
         File.WriteAllText(filename, json);
 
+        OnFunctionChange?.Invoke(this);
+
         return true;
+    }
+
+    public void Remove()
+    {
+        var filename = @"Functions\" + Name.Replace(" ", "_") + ".json";
+        File.Delete(filename);
     }
 
     static public Function? Load(FileInfo fileInfo)
     {
-        return JsonSerializer.Deserialize<Function>(fileInfo.FullName);
+        try
+        {
+            string json = File.ReadAllText(fileInfo.FullName);
+            return JsonSerializer.Deserialize<Function>(json);
+        }
+        catch
+        {
+            return null;
+        }
     }
 }
 }
