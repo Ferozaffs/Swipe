@@ -251,5 +251,36 @@ public partial class FunctionView : UserControl
             _currentFunction.SetPowershellCommand(((TextBox)sender).Text);
         }
     }
+
+    private void ScriptRun_Click(object sender, RoutedEventArgs e)
+    {
+        Swipe_Core.Function f = new Function();
+        f.SetName(FuncNameTextBox.Text);
+        f.SetFunctionType((FunctionType)FuncTypeCombo.SelectedItem);
+        switch (f.FuncType)
+        {
+        case FunctionType.Powershell: {
+
+            f.SetPowershellCommand(FuncCommandTextBox.Text);
+            break;
+        }
+        case FunctionType.Launch: {
+
+            f.SetExe(FuncCommandTextBox.Text);
+            break;
+        }
+        }
+
+        var result = f.RunFunction();
+        FuncScriptStatus.Text = result;
+        if (result == "Success")
+        {
+            FuncScriptStatus.Foreground = new SolidColorBrush(Colors.LightGreen);
+        }
+        else
+        {
+            FuncScriptStatus.Foreground = new SolidColorBrush(Colors.IndianRed);
+        }
+    }
 }
 }

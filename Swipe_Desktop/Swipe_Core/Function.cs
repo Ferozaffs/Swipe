@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
-using System.Management.Automation;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Management.Automation;
 
 namespace Swipe_Core
 {
@@ -72,7 +72,7 @@ public class Function
         Save();
     }
 
-    public void RunFunction()
+    public string RunFunction()
     {
         if (IsEnabled)
         {
@@ -81,10 +81,31 @@ public class Function
             switch (FuncType)
             {
             case FunctionType.Powershell:
-                using (PowerShell PowerShellInstance = PowerShell.Create())
+                using (PowerShell ps = PowerShell.Create())
                 {
-                    PowerShellInstance.AddScript(Command);
-                    IAsyncResult result = PowerShellInstance.BeginInvoke();
+                    try
+                    {
+                        ps.AddCommand("Set-ExecutionPolicy")
+                            .AddParameter("ExecutionPolicy", "RemoteSigned")
+                            .AddParameter("Scope", "Process")
+                            .Invoke();
+
+                        ps.AddScript(Command).Invoke();
+
+                        if (ps.Streams.Error.Count > 0)
+                        {
+                            string errorString = "Errors detected:";
+                            foreach (var error in ps.Streams.Error)
+                            {
+                                errorString += $"- {error.ToString()}";
+                            }
+                            return errorString;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        return ex.Message;
+                    }
                 }
                 break;
             case FunctionType.Launch:
@@ -93,7 +114,10 @@ public class Function
                 Process.Start(start);
                 break;
             }
+
+            return "Success";
         }
+        return "Disabled";
     }
     private bool Save()
     {

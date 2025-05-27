@@ -65,7 +65,7 @@
 
         <StackPanel
             x:Name="DetailsPanel"
-            Height="250"
+            Height="275"
             HorizontalAlignment="Stretch">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -130,16 +130,19 @@
                             SelectionChanged="FuncTypeCombo_SelectionChanged" />
                     </WrapPanel>
                     <WrapPanel>
-                        <TextBlock
-                            Width="50"
-                            Margin="5"
-                            FontSize="14"
-                            Foreground="Gray"
-                            Text="Script:" />
+                        <StackPanel>
+                            <TextBlock
+                                Width="50"
+                                Margin="5"
+                                FontSize="14"
+                                Foreground="Gray"
+                                Text="Script:" />
+                            <Button Margin="2,10,0,0" Click="ScriptRun_Click">Run</Button>
+                        </StackPanel>
                         <TextBox
                             x:Name="FuncCommandTextBox"
                             Width="350"
-                            Height="90"
+                            Height="85"
                             Margin="5"
                             AcceptsReturn="True"
                             Background="#333333"
@@ -150,7 +153,13 @@
                             Text=""
                             TextChanged="FuncCommandTextBox_TextChanged"
                             VerticalScrollBarVisibility="Auto" />
+
                     </WrapPanel>
+                    <TextBlock
+                        x:Name="FuncScriptStatus"
+                        Margin="5,0,0,0"
+                        FontSize="8"
+                        TextWrapping="Wrap" />
                 </StackPanel>
                 <StackPanel Grid.Column="1">
                     <TextBlock
