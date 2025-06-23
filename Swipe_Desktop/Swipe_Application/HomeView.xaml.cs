@@ -18,7 +18,7 @@ namespace Swipe_Application
 /// <summary>
 /// Interaction logic for HomeView.xaml
 /// </summary>
-public partial class HomeView : UserControl
+public partial class HomeView : System.Windows.Controls.UserControl
 {
     public HomeView()
     {

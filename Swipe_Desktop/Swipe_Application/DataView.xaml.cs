@@ -4,6 +4,8 @@ using Swipe_Core;
 using System.Windows.Controls;
 using System.Windows;
 using System.Windows.Media;
+using UserControl = System.Windows.Controls.UserControl;
+using Color = System.Windows.Media.Color;
 
 namespace Swipe_Application
 {
@@ -75,9 +77,10 @@ public partial class DataView : UserControl
                     DetectPanel.Children.RemoveAt(1);
                 }
 
-                StackPanel stackPanel = new StackPanel { Orientation = Orientation.Horizontal,
-                                                         HorizontalAlignment = HorizontalAlignment.Center,
-                                                         VerticalAlignment = VerticalAlignment.Stretch };
+                StackPanel stackPanel =
+                    new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal,
+                                     HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                                     VerticalAlignment = System.Windows.VerticalAlignment.Stretch };
 
                 var graph = CreateGraph(">LinAccel_x_detected", 20, -20, Color.FromRgb(100, 0, 0), true, true);
                 graph.Series.ElementAt(0).Values.Clear();

@@ -9,6 +9,7 @@
     Width="1024"
     Height="768"
     mc:Ignorable="d">
+
     <Grid Background="#444444">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="64" />

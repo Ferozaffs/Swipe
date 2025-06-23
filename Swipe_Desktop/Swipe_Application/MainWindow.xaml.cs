@@ -3,6 +3,10 @@ using Swipe_Core;
 using System.Windows;
 using System.ComponentModel;
 using System.Windows.Media;
+using System.Windows.Forms;
+using System.Windows.Input;
+using System.IO;
+using System.Reflection;
 
 namespace Swipe_Application
 {
@@ -15,6 +19,7 @@ public partial class MainWindow : Window
     public FunctionManager FunctionManager { get; }
     // private COMReader? _comReader;
     private BluetoothReader? _btReader;
+    private NotifyIcon _notifyIcon;
 
     public MainWindow()
     {
@@ -35,9 +40,23 @@ public partial class MainWindow : Window
         CurveCollector.OnStatus += UpdateDeviceStatus;
 
         FunctionManager = new FunctionManager(CurveCollector);
+
+        _notifyIcon = new NotifyIcon();
+        string resourceName = "Swipe_Application.Icon1.ico";
+        using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
+        {
+            _notifyIcon.Icon = new Icon(stream);
+        }
+        _notifyIcon.Visible = true;
+        _notifyIcon.Text = "Swipe";
+
+        _notifyIcon.DoubleClick += _notifyIcon_ShowWindow;
     }
+
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
+        _notifyIcon.Dispose();
+
         CurveCollector.OnStatus -= UpdateDeviceStatus;
         if (_btReader != null)
         {
@@ -50,6 +69,22 @@ public partial class MainWindow : Window
 
         _btReader?.Stop();
         //_comReader?.StopCom();
+    }
+
+    protected override void OnStateChanged(EventArgs e)
+    {
+        if (WindowState == WindowState.Minimized)
+        {
+            Hide();
+        }
+        base.OnStateChanged(e);
+    }
+
+    private void _notifyIcon_ShowWindow(object? sender, EventArgs e)
+    {
+        Show();
+        WindowState = WindowState.Normal;
+        Activate();
     }
 
     private void Home_Click(object sender, RoutedEventArgs e)

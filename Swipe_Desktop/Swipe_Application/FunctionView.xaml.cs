@@ -10,7 +10,7 @@ using static Swipe_Core.Function;
 
 namespace Swipe_Application
 {
-public partial class FunctionView : UserControl
+public partial class FunctionView : System.Windows.Controls.UserControl
 {
     private bool _record = false;
 
@@ -80,7 +80,7 @@ public partial class FunctionView : UserControl
     {
         if (_collector != null)
         {
-            if (sender is Button btn)
+            if (sender is System.Windows.Controls.Button btn)
             {
                 _record = !_record;
                 btn.Content = _record ? "◼" : "⬤";
@@ -97,7 +97,8 @@ public partial class FunctionView : UserControl
                 return;
             }
 
-            if (_functionManager.GetFunctions().Last().Name == "New Function")
+            if (_functionManager.GetFunctions().Count > 0 &&
+                _functionManager.GetFunctions().Last().Name == "New Function")
             {
                 _currentFunction = _functionManager.GetFunctions().Last();
                 UpdateFunctionList(_functionManager.GetFunctions());
@@ -144,7 +145,7 @@ public partial class FunctionView : UserControl
                     return;
                 }
 
-                var buttonStyle = (Style)Application.Current.Resources["FlatDarkButton"];
+                var buttonStyle = (Style)System.Windows.Application.Current.Resources["FlatDarkButton"];
 
                 if (_currentFunction == null)
                 {
@@ -165,8 +166,8 @@ public partial class FunctionView : UserControl
                     }
                     int index = i;
 
-                    var delBtn = new Button { Content = "✖", Style = buttonStyle, FontSize = 10, Height = 24,
-                                              FontWeight = fontWeight };
+                    var delBtn = new System.Windows.Controls.Button { Content = "✖", Style = buttonStyle, FontSize = 10,
+                                                                      Height = 24, FontWeight = fontWeight };
                     delBtn.Click += (s, e) => _functionManager?.RemoveFunction(index);
                     FunctionDeleteColumn.Children.Add(delBtn);
 
@@ -232,7 +233,7 @@ public partial class FunctionView : UserControl
     {
         if (_currentFunction != null)
         {
-            _currentFunction.SetName(((TextBox)sender).Text);
+            _currentFunction.SetName(((System.Windows.Controls.TextBox)sender).Text);
         }
     }
 
@@ -240,7 +241,7 @@ public partial class FunctionView : UserControl
     {
         if (_currentFunction != null)
         {
-            _currentFunction.SetFunctionType((FunctionType)((ComboBox)sender).SelectedItem);
+            _currentFunction.SetFunctionType((FunctionType)((System.Windows.Controls.ComboBox)sender).SelectedItem);
         }
     }
 
@@ -248,7 +249,7 @@ public partial class FunctionView : UserControl
     {
         if (_currentFunction != null)
         {
-            _currentFunction.SetPowershellCommand(((TextBox)sender).Text);
+            _currentFunction.SetPowershellCommand(((System.Windows.Controls.TextBox)sender).Text);
         }
     }
 
