@@ -76,6 +76,7 @@ public partial class MainWindow : Window
         if (WindowState == WindowState.Minimized)
         {
             Hide();
+            FunctionManager.IsExecutionEnabled = true;
         }
         base.OnStateChanged(e);
     }
@@ -85,6 +86,10 @@ public partial class MainWindow : Window
         Show();
         WindowState = WindowState.Normal;
         Activate();
+        HomeViewControl.Visibility = Visibility.Visible;
+        FunctionViewControl.Visibility = Visibility.Collapsed;
+        DataViewControl.Visibility = Visibility.Collapsed;
+        FunctionManager.IsExecutionEnabled = true;
     }
 
     private void Home_Click(object sender, RoutedEventArgs e)
@@ -92,6 +97,7 @@ public partial class MainWindow : Window
         HomeViewControl.Visibility = Visibility.Visible;
         FunctionViewControl.Visibility = Visibility.Collapsed;
         DataViewControl.Visibility = Visibility.Collapsed;
+        FunctionManager.IsExecutionEnabled = true;
     }
 
     private void Functions_Click(object sender, RoutedEventArgs e)
@@ -99,6 +105,7 @@ public partial class MainWindow : Window
         HomeViewControl.Visibility = Visibility.Collapsed;
         FunctionViewControl.Visibility = Visibility.Visible;
         DataViewControl.Visibility = Visibility.Collapsed;
+        FunctionManager.IsExecutionEnabled = false;
     }
 
     private void Data_Click(object sender, RoutedEventArgs e)
@@ -106,6 +113,7 @@ public partial class MainWindow : Window
         HomeViewControl.Visibility = Visibility.Collapsed;
         FunctionViewControl.Visibility = Visibility.Collapsed;
         DataViewControl.Visibility = Visibility.Visible;
+        FunctionManager.IsExecutionEnabled = true;
     }
 
     private void RecalibrateButton_Click(object sender, RoutedEventArgs e)

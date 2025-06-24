@@ -1,12 +1,9 @@
 ﻿using Swipe_Core;
-using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Media;
-using Windows.Networking.Proximity;
-using Windows.UI.Text;
 using static Swipe_Core.Function;
+using Color = System.Windows.Media.Color;
 
 namespace Swipe_Application
 {
@@ -74,6 +71,48 @@ public partial class FunctionView : System.Windows.Controls.UserControl
             FuncTypeCombo.IsEnabled = true;
             FuncCommandTextBox.IsEnabled = true;
         }
+
+        UpdateRecordedCurves();
+    }
+
+    public void UpdateRecordedCurves()
+    {
+        RecordsPanel.Children.RemoveRange(1, RecordsPanel.Children.Count - 1);
+        if (_currentFunction != null)
+        {
+            var count = 0;
+            foreach (var recording in _currentFunction.Recordings)
+            {
+                StackPanel stackPanel =
+                    new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal,
+                                     HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                                     VerticalAlignment = System.Windows.VerticalAlignment.Stretch };
+
+                var (graph, _) = App.CreateGraph(">x-" + count, 20, -20, Color.FromRgb(100, 0, 0), true);
+                graph.Series.ElementAt(0).Values.Clear();
+                graph.Series.ElementAt(0).Values.AddRange(recording[">LinAccel_x"].Cast<object>());
+                stackPanel.Children.Add(graph);
+
+                (graph, _) = App.CreateGraph("y-" + count, 20, -20, Color.FromRgb(0, 100, 0), true);
+                graph.Series.ElementAt(0).Values.Clear();
+                graph.Series.ElementAt(0).Values.AddRange(recording[">LinAccel_y"].Cast<object>());
+                stackPanel.Children.Add(graph);
+
+                (graph, _) = App.CreateGraph(">z-" + count, 20, -20, Color.FromRgb(0, 0, 100), true);
+                graph.Series.ElementAt(0).Values.Clear();
+                graph.Series.ElementAt(0).Values.AddRange(recording[">LinAccel_z"].Cast<object>());
+                stackPanel.Children.Add(graph);
+
+                (graph, _) = App.CreateGraph(">p-" + count, 50, 0, Color.FromRgb(100, 100, 0), true);
+                graph.Series.ElementAt(0).Values.Clear();
+                graph.Series.ElementAt(0).Values.AddRange(recording[">Proximity"].Cast<object>());
+                stackPanel.Children.Add(graph);
+
+                RecordsPanel.Children.Add(stackPanel);
+
+                count++;
+            }
+        }
     }
 
     private void RecordButton_Click(object sender, RoutedEventArgs e)
@@ -116,14 +155,10 @@ public partial class FunctionView : System.Windows.Controls.UserControl
     {
         this.Dispatcher.Invoke(() =>
                                {
-                                   if (_functionManager != null && _currentFunction != null)
+                                   if (_functionManager != null && _currentFunction != null && _record)
                                    {
-                                       var prevState = _functionManager.IsExecutionEnabled;
-                                       _functionManager.IsExecutionEnabled = false;
-
                                        _currentFunction.AddRecording(detectedCurves);
-
-                                       _functionManager.IsExecutionEnabled = prevState;
+                                       UpdateEditingStatus();
                                    }
                                });
     }

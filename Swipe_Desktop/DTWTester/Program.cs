@@ -41,7 +41,10 @@ internal class Program
                     List<float> ? values;
                     if (curves.TryGetValue(baselineCurve.Key, out values))
                     {
-                        var dtw = DTW.CalculateDTW(baselineCurve.Value, values);
+                        double[] a = baselineCurve.Value.Select(f => (double)f).ToArray();
+                        double[] b = values.Select(f => (double)f).ToArray();
+
+                        var dtw = (float)FastDtw.CSharp.Dtw.GetScore(a, b);
                         results.TryAdd(baselineCurve.Key, new List<float>());
                         results[baselineCurve.Key].Add(dtw);
                         total += dtw;

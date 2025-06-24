@@ -68,7 +68,14 @@ public class Function
 
     public void AddRecording(Dictionary<string, List<float>> recording)
     {
-        Recordings.Add(recording);
+        var deepCopy = new Dictionary<string, List<float>>();
+
+        foreach (var graph in recording)
+        {
+            deepCopy[graph.Key] = new List<float>(graph.Value);
+        }
+
+        Recordings.Add(deepCopy);
         Save();
     }
 

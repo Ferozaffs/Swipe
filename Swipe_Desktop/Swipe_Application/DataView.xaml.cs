@@ -21,10 +21,21 @@ public partial class DataView : UserControl
         InitializeComponent();
         Loaded += OnLoaded;
 
-        InputPanel.Children.Add(CreateGraph(">LinAccel_x", 20, -20, Color.FromRgb(100, 0, 0), true, false));
-        InputPanel.Children.Add(CreateGraph(">LinAccel_y", 20, -20, Color.FromRgb(0, 100, 0), true, false));
-        InputPanel.Children.Add(CreateGraph(">LinAccel_z", 20, -20, Color.FromRgb(0, 0, 100), true, false));
-        InputPanel.Children.Add(CreateGraph(">Proximity", 50, 0, Color.FromRgb(100, 100, 0), true, false));
+        var (panel, series) = App.CreateGraph(">LinAccel_x", 20, -20, Color.FromRgb(100, 0, 0), true);
+        InputPanel.Children.Add(panel);
+        _seriesList.Add(series);
+
+        (panel, series) = App.CreateGraph(">LinAccel_y", 20, -20, Color.FromRgb(0, 100, 0), true);
+        InputPanel.Children.Add(panel);
+        _seriesList.Add(series);
+
+        (panel, series) = App.CreateGraph(">LinAccel_z", 20, -20, Color.FromRgb(0, 0, 100), true);
+        InputPanel.Children.Add(panel);
+        _seriesList.Add(series);
+
+        (panel, series) = App.CreateGraph(">Proximity", 50, 0, Color.FromRgb(100, 100, 0), true);
+        InputPanel.Children.Add(panel);
+        _seriesList.Add(series);
 
         DataContext = this;
     }
@@ -82,58 +93,28 @@ public partial class DataView : UserControl
                                      HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
                                      VerticalAlignment = System.Windows.VerticalAlignment.Stretch };
 
-                var graph = CreateGraph(">LinAccel_x_detected", 20, -20, Color.FromRgb(100, 0, 0), true, true);
+                var (graph, _) = App.CreateGraph(">LinAccel_x_detected", 20, -20, Color.FromRgb(100, 0, 0), true);
                 graph.Series.ElementAt(0).Values.Clear();
                 graph.Series.ElementAt(0).Values.AddRange(detectedCurves[">LinAccel_x"].Cast<object>());
                 stackPanel.Children.Add(graph);
 
-                graph = CreateGraph(">LinAccel_y_detected", 20, -20, Color.FromRgb(0, 100, 0), true, true);
+                (graph, _) = App.CreateGraph(">LinAccel_y_detected", 20, -20, Color.FromRgb(0, 100, 0), true);
                 graph.Series.ElementAt(0).Values.Clear();
                 graph.Series.ElementAt(0).Values.AddRange(detectedCurves[">LinAccel_y"].Cast<object>());
                 stackPanel.Children.Add(graph);
 
-                graph = CreateGraph(">LinAccel_z_detected", 20, -20, Color.FromRgb(0, 0, 100), true, true);
+                (graph, _) = App.CreateGraph(">LinAccel_z_detected", 20, -20, Color.FromRgb(0, 0, 100), true);
                 graph.Series.ElementAt(0).Values.Clear();
                 graph.Series.ElementAt(0).Values.AddRange(detectedCurves[">LinAccel_z"].Cast<object>());
                 stackPanel.Children.Add(graph);
 
-                graph = CreateGraph(">Proximity_detected", 50, 0, Color.FromRgb(100, 100, 0), true, true);
+                (graph, _) = App.CreateGraph(">Proximity_detected", 50, 0, Color.FromRgb(100, 100, 0), true);
                 graph.Series.ElementAt(0).Values.Clear();
                 graph.Series.ElementAt(0).Values.AddRange(detectedCurves[">Proximity"].Cast<object>());
                 stackPanel.Children.Add(graph);
 
                 DetectPanel.Children.Add(stackPanel);
             });
-    }
-
-    private CartesianChart CreateGraph(string title, float max, float min, Color color, bool showLabels, bool temporary)
-    {
-        var sc = new SeriesCollection { new LineSeries { Title = title, Values = new ChartValues<float>(new float[100]),
-                                                         PointGeometrySize = 0.0, Stroke = new SolidColorBrush(color),
-                                                         Fill = new SolidColorBrush(
-                                                             Color.FromArgb(50, color.R, color.G, color.B)) } };
-
-        if (temporary == false)
-        {
-            _seriesList.Add(sc);
-        }
-
-        LiveCharts.Wpf.Separator separatorX =
-            new LiveCharts.Wpf.Separator { Stroke = System.Windows.Media.Brushes.Gray };
-        LiveCharts.Wpf.Separator separatorY =
-            new LiveCharts.Wpf.Separator { Stroke = System.Windows.Media.Brushes.Gray };
-
-        var xAxis = new Axis { Title = title, ShowLabels = false, Separator = separatorX };
-        var yAxis = new Axis { MaxValue = max, MinValue = min, ShowLabels = showLabels, Separator = separatorY };
-
-        var chart = new CartesianChart { DataTooltip = null, DisableAnimations = true, Hoverable = false, Series = sc };
-        chart.Width = 200;
-        chart.Height = 100;
-        chart.Margin = new System.Windows.Thickness(5);
-        chart.AxisX.Add(xAxis);
-        chart.AxisY.Add(yAxis);
-
-        return chart;
     }
 }
 }
