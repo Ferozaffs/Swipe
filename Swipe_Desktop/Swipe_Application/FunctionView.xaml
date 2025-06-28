@@ -153,7 +153,6 @@
                             Text=""
                             TextChanged="FuncCommandTextBox_TextChanged"
                             VerticalScrollBarVisibility="Auto" />
-
                     </WrapPanel>
                     <TextBlock
                         x:Name="FuncScriptStatus"
@@ -171,10 +170,7 @@
             </Grid>
         </StackPanel>
         <Canvas Height="2" Background="#333333" />
-        <StackPanel
-            x:Name="RecordsPanel"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch">
+        <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <WrapPanel>
                 <TextBlock
                     Margin="5"
@@ -188,6 +184,60 @@
                     Content="⬤"
                     Style="{StaticResource FlatDarkButton}" />
             </WrapPanel>
+            <WrapPanel>
+                <TextBlock
+                    Margin="5"
+                    FontSize="14"
+                    Foreground="Gray"
+                    Text="X Axis:" />
+                <CheckBox
+                    x:Name="XAxisEnabled"
+                    Margin="0,8,10,10"
+                    Background="LightGray"
+                    Checked="CurveEnabled_Checked"
+                    IsChecked="True"
+                    Unchecked="CurveEnabled_Unchecked" />
+                <TextBlock
+                    Margin="5"
+                    FontSize="14"
+                    Foreground="Gray"
+                    Text="Y Axis:" />
+                <CheckBox
+                    x:Name="YAxisEnabled"
+                    Margin="0,8,10,10"
+                    Background="LightGray"
+                    Checked="CurveEnabled_Checked"
+                    IsChecked="True"
+                    Unchecked="CurveEnabled_Unchecked" />
+                <TextBlock
+                    Margin="5"
+                    FontSize="14"
+                    Foreground="Gray"
+                    Text="Z Axis:" />
+                <CheckBox
+                    x:Name="ZAxisEnabled"
+                    Margin="0,8,10,10"
+                    Background="LightGray"
+                    Checked="CurveEnabled_Checked"
+                    IsChecked="True"
+                    Unchecked="CurveEnabled_Unchecked" />
+                <TextBlock
+                    Margin="5"
+                    FontSize="14"
+                    Foreground="Gray"
+                    Text="Proximity:" />
+                <CheckBox
+                    x:Name="ProximityEnabled"
+                    Margin="0,8,10,10"
+                    Background="LightGray"
+                    Checked="CurveEnabled_Checked"
+                    IsChecked="True"
+                    Unchecked="CurveEnabled_Unchecked" />
+            </WrapPanel>
         </StackPanel>
+        <StackPanel
+            x:Name="RecordsPanel"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Stretch" />
     </StackPanel>
 </UserControl>

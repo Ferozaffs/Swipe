@@ -10,7 +10,7 @@ public class FunctionManager
 
     private List<Function> _functions = new List<Function>();
     private CurveCollector? _collector = null;
-    private float DTWThreshold = 2.0f;
+    private float DTWThreshold = 2.25f;
 
     public FunctionManager(CurveCollector collector)
     {
@@ -86,15 +86,15 @@ public class FunctionManager
             return;
         }
 
-        List<(Function, float)> functionDtws = new List<(Function, float)>();
+        List<(Function, float, List<(Guid, float)>)> functionDtws = new List<(Function, float, List<(Guid, float)>)>();
         foreach (var function in _functions)
         {
-            if (function.Recordings.Count == 0)
+            if (function.IsEnabled && function.Recordings.Count == 0)
             {
                 continue;
             }
 
-            List<float> dtws = new List<float>();
+            List<(Guid, float)> dtws = new List<(Guid, float)>();
             var rC = 0;
             foreach (var recording in function.Recordings)
             {
@@ -102,13 +102,13 @@ public class FunctionManager
                 var cC = 0;
                 foreach (KeyValuePair<string, List<float>> curve in detectedCurves)
                 {
-                    if (curve.Key.Contains("Proximity"))
+                    if (!function.AxisEnabled.ContainsKey(curve.Key) || !function.AxisEnabled[curve.Key])
                     {
                         continue;
                     }
 
                     List<float> ? values;
-                    if (recording.TryGetValue(curve.Key, out values))
+                    if (recording.Value.TryGetValue(curve.Key, out values))
                     {
                         double[] a = curve.Value.Select(f => (double)f).ToArray();
                         double[] b = values.Select(f => (double)f).ToArray();
@@ -122,20 +122,28 @@ public class FunctionManager
 
                     cC++;
                 }
-                dtws.Add(dtw);
+                dtws.Add((recording.Key, dtw));
                 rC++;
             }
-            dtws.Sort();
-            var bestDtws = dtws.Take(3);
-            var averageDtw = bestDtws.Average();
+            var sortedAsc = dtws.OrderBy(x => x.Item2).ToList();
+            var bestDtws = sortedAsc.Take(3);
+            var averageDtw = bestDtws.Average(x => x.Item2);
 
-            functionDtws.Add((function, averageDtw));
+            functionDtws.Add((function, averageDtw, sortedAsc));
         }
-        var sortedDict = from dtw in functionDtws orderby dtw.Item2 ascending select dtw;
+        var sortedDict = functionDtws.OrderBy(x => x.Item2).ToList();
 
-        if (functionDtws.Count > 0 && functionDtws[0].Item2 < DTWThreshold)
+        if (sortedDict.Count > 0 && sortedDict[0].Item2 < DTWThreshold)
         {
-            functionDtws[0].Item1.RunFunction();
+            if (sortedDict[0].Item1.RunFunction() == "Success")
+            {
+                sortedDict[0].Item1.NumActivations++;
+            }
+
+            foreach (var recording in sortedDict[0].Item3)
+            {
+                sortedDict[0].Item1.RecordingActivations[recording.Item1]++;
+            }
         }
     }
 }

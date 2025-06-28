@@ -13,6 +13,7 @@ public partial class DataView : UserControl
 {
     private List<SeriesCollection> _seriesList = new List<SeriesCollection>();
     private int _downSampleRate = 10;
+    private byte graphStrength = 150;
 
     private CurveCollector? _collector = null;
 
@@ -21,19 +22,19 @@ public partial class DataView : UserControl
         InitializeComponent();
         Loaded += OnLoaded;
 
-        var (panel, series) = App.CreateGraph(">LinAccel_x", 20, -20, Color.FromRgb(100, 0, 0), true);
+        var (panel, series) = App.CreateGraph(">LinAccel_x", 20, -20, Color.FromRgb(graphStrength, 0, 0), true);
         InputPanel.Children.Add(panel);
         _seriesList.Add(series);
 
-        (panel, series) = App.CreateGraph(">LinAccel_y", 20, -20, Color.FromRgb(0, 100, 0), true);
+        (panel, series) = App.CreateGraph(">LinAccel_y", 20, -20, Color.FromRgb(0, graphStrength, 0), true);
         InputPanel.Children.Add(panel);
         _seriesList.Add(series);
 
-        (panel, series) = App.CreateGraph(">LinAccel_z", 20, -20, Color.FromRgb(0, 0, 100), true);
+        (panel, series) = App.CreateGraph(">LinAccel_z", 20, -20, Color.FromRgb(0, 0, graphStrength), true);
         InputPanel.Children.Add(panel);
         _seriesList.Add(series);
 
-        (panel, series) = App.CreateGraph(">Proximity", 50, 0, Color.FromRgb(100, 100, 0), true);
+        (panel, series) = App.CreateGraph(">Proximity", 50, 0, Color.FromRgb(graphStrength, graphStrength, 0), true);
         InputPanel.Children.Add(panel);
         _seriesList.Add(series);
 
@@ -93,22 +94,24 @@ public partial class DataView : UserControl
                                      HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
                                      VerticalAlignment = System.Windows.VerticalAlignment.Stretch };
 
-                var (graph, _) = App.CreateGraph(">LinAccel_x_detected", 20, -20, Color.FromRgb(100, 0, 0), true);
+                var (graph, _) =
+                    App.CreateGraph(">LinAccel_x_detected", 20, -20, Color.FromRgb(graphStrength, 0, 0), true);
                 graph.Series.ElementAt(0).Values.Clear();
                 graph.Series.ElementAt(0).Values.AddRange(detectedCurves[">LinAccel_x"].Cast<object>());
                 stackPanel.Children.Add(graph);
 
-                (graph, _) = App.CreateGraph(">LinAccel_y_detected", 20, -20, Color.FromRgb(0, 100, 0), true);
+                (graph, _) = App.CreateGraph(">LinAccel_y_detected", 20, -20, Color.FromRgb(0, graphStrength, 0), true);
                 graph.Series.ElementAt(0).Values.Clear();
                 graph.Series.ElementAt(0).Values.AddRange(detectedCurves[">LinAccel_y"].Cast<object>());
                 stackPanel.Children.Add(graph);
 
-                (graph, _) = App.CreateGraph(">LinAccel_z_detected", 20, -20, Color.FromRgb(0, 0, 100), true);
+                (graph, _) = App.CreateGraph(">LinAccel_z_detected", 20, -20, Color.FromRgb(0, 0, graphStrength), true);
                 graph.Series.ElementAt(0).Values.Clear();
                 graph.Series.ElementAt(0).Values.AddRange(detectedCurves[">LinAccel_z"].Cast<object>());
                 stackPanel.Children.Add(graph);
 
-                (graph, _) = App.CreateGraph(">Proximity_detected", 50, 0, Color.FromRgb(100, 100, 0), true);
+                (graph, _) =
+                    App.CreateGraph(">Proximity_detected", 50, 0, Color.FromRgb(graphStrength, graphStrength, 0), true);
                 graph.Series.ElementAt(0).Values.Clear();
                 graph.Series.ElementAt(0).Values.AddRange(detectedCurves[">Proximity"].Cast<object>());
                 stackPanel.Children.Add(graph);

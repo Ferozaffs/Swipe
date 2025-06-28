@@ -25,8 +25,15 @@ public class Function
     [JsonInclude]
     public string Command { get; private set; } = "";
     [JsonInclude]
-    public List<Dictionary<string, List<float>>> Recordings { get; private set; } =
-        new List<Dictionary<string, List<float>>>();
+    public int NumActivations { get; set; } = 0;
+    [JsonInclude]
+    public Dictionary<Guid, Dictionary<string, List<float>>> Recordings { get; private set; } =
+        new Dictionary<Guid, Dictionary<string, List<float>>>();
+    [JsonInclude]
+    public Dictionary<Guid, int> RecordingActivations { get; private set; } = new Dictionary<Guid, int>();
+    [JsonInclude]
+    public Dictionary<string, bool> AxisEnabled { get; private set; } = new Dictionary<string, bool> {
+        { ">LinAccel_x", true }, { ">LinAccel_y", true }, { ">LinAccel_z", true }, { ">Proximity", true } };
 
     public void Enable()
     {
@@ -66,7 +73,7 @@ public class Function
         Save();
     }
 
-    public void AddRecording(Dictionary<string, List<float>> recording)
+    public Guid AddRecording(Dictionary<string, List<float>> recording)
     {
         var deepCopy = new Dictionary<string, List<float>>();
 
@@ -75,8 +82,22 @@ public class Function
             deepCopy[graph.Key] = new List<float>(graph.Value);
         }
 
-        Recordings.Add(deepCopy);
+        var guid = Guid.NewGuid();
+        Recordings.Add(guid, deepCopy);
+        RecordingActivations.Add(guid, 0);
         Save();
+
+        return guid;
+    }
+
+    public void RemoveRecording(Guid guid)
+    {
+        if (Recordings.ContainsKey(guid))
+        {
+            Recordings.Remove(guid);
+            RecordingActivations.Remove(guid);
+            Save();
+        }
     }
 
     public string RunFunction()
@@ -159,6 +180,15 @@ public class Function
         catch
         {
             return null;
+        }
+    }
+
+    public void SetAxisEnabled(string axis, bool enabled)
+    {
+        if (AxisEnabled.ContainsKey(axis))
+        {
+            AxisEnabled[axis] = enabled;
+            Save();
         }
     }
 }

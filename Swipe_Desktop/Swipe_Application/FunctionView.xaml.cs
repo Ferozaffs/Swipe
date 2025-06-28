@@ -1,8 +1,12 @@
 ﻿using Swipe_Core;
+using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using System.Windows.Media;
+using Windows.UI.Text;
 using static Swipe_Core.Function;
+using CheckBox = System.Windows.Controls.CheckBox;
 using Color = System.Windows.Media.Color;
 
 namespace Swipe_Application
@@ -77,7 +81,10 @@ public partial class FunctionView : System.Windows.Controls.UserControl
 
     public void UpdateRecordedCurves()
     {
-        RecordsPanel.Children.RemoveRange(1, RecordsPanel.Children.Count - 1);
+        byte activeStrength = 150;
+        byte inactiveStrength = 15;
+
+        RecordsPanel.Children.Clear();
         if (_currentFunction != null)
         {
             var count = 0;
@@ -88,25 +95,49 @@ public partial class FunctionView : System.Windows.Controls.UserControl
                                      HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
                                      VerticalAlignment = System.Windows.VerticalAlignment.Stretch };
 
-                var (graph, _) = App.CreateGraph(">x-" + count, 20, -20, Color.FromRgb(100, 0, 0), true);
+                var buttonStyle = (Style)System.Windows.Application.Current.Resources["FlatDarkButton"];
+                var fontWeight = FontWeights.Regular;
+                var delBtn = new System.Windows.Controls.Button { Content = "✖", Style = buttonStyle, FontSize = 14,
+                                                                  FontWeight = fontWeight };
+                delBtn.Click += (s, e) =>
+                {
+                    _currentFunction?.RemoveRecording(recording.Key);
+                    UpdateEditingStatus();
+                };
+                stackPanel.Children.Add(delBtn);
+
+                byte strength = _currentFunction.AxisEnabled[">LinAccel_x"] ? activeStrength : inactiveStrength;
+                var (graph, _) = App.CreateGraph(">LinAccel_x", 20, -20, Color.FromRgb(strength, 0, 0), true);
                 graph.Series.ElementAt(0).Values.Clear();
-                graph.Series.ElementAt(0).Values.AddRange(recording[">LinAccel_x"].Cast<object>());
+                graph.Series.ElementAt(0).Values.AddRange(recording.Value[">LinAccel_x"].Cast<object>());
                 stackPanel.Children.Add(graph);
 
-                (graph, _) = App.CreateGraph("y-" + count, 20, -20, Color.FromRgb(0, 100, 0), true);
+                strength = _currentFunction.AxisEnabled[">LinAccel_y"] ? activeStrength : inactiveStrength;
+                (graph, _) = App.CreateGraph(">LinAccel_y", 20, -20, Color.FromRgb(0, strength, 0), true);
                 graph.Series.ElementAt(0).Values.Clear();
-                graph.Series.ElementAt(0).Values.AddRange(recording[">LinAccel_y"].Cast<object>());
+                graph.Series.ElementAt(0).Values.AddRange(recording.Value[">LinAccel_y"].Cast<object>());
                 stackPanel.Children.Add(graph);
 
-                (graph, _) = App.CreateGraph(">z-" + count, 20, -20, Color.FromRgb(0, 0, 100), true);
+                strength = _currentFunction.AxisEnabled[">LinAccel_z"] ? activeStrength : inactiveStrength;
+                (graph, _) = App.CreateGraph(">LinAccel_z", 20, -20, Color.FromRgb(0, 0, strength), true);
                 graph.Series.ElementAt(0).Values.Clear();
-                graph.Series.ElementAt(0).Values.AddRange(recording[">LinAccel_z"].Cast<object>());
+                graph.Series.ElementAt(0).Values.AddRange(recording.Value[">LinAccel_z"].Cast<object>());
                 stackPanel.Children.Add(graph);
 
-                (graph, _) = App.CreateGraph(">p-" + count, 50, 0, Color.FromRgb(100, 100, 0), true);
+                strength = _currentFunction.AxisEnabled[">Proximity"] ? activeStrength : inactiveStrength;
+                (graph, _) = App.CreateGraph(">Proximity", 50, 0, Color.FromRgb(strength, strength, 0), true);
                 graph.Series.ElementAt(0).Values.Clear();
-                graph.Series.ElementAt(0).Values.AddRange(recording[">Proximity"].Cast<object>());
+                graph.Series.ElementAt(0).Values.AddRange(recording.Value[">Proximity"].Cast<object>());
                 stackPanel.Children.Add(graph);
+
+                var numActivationsText =
+                    new TextBlock() { Text = "Activations:" + _currentFunction.RecordingActivations[recording.Key],
+                                      FontSize = 14,
+                                      Height = 24,
+                                      FontWeight = FontWeights.Bold,
+                                      Foreground = new SolidColorBrush(Colors.Gray),
+                                      Margin = new System.Windows.Thickness(20, 0, 0, 0) };
+                stackPanel.Children.Add(numActivationsText);
 
                 RecordsPanel.Children.Add(stackPanel);
 
@@ -155,7 +186,18 @@ public partial class FunctionView : System.Windows.Controls.UserControl
     {
         this.Dispatcher.Invoke(() =>
                                {
-                                   if (_functionManager != null && _currentFunction != null && _record)
+                                   if (_record == false)
+                                   {
+                                       return;
+                                   }
+
+                                   if (Visibility != Visibility.Visible)
+                                   {
+                                       _record = false;
+                                       return;
+                                   }
+
+                                   if (_functionManager != null && _currentFunction != null)
                                    {
                                        _currentFunction.AddRecording(detectedCurves);
                                        UpdateEditingStatus();
@@ -316,6 +358,63 @@ public partial class FunctionView : System.Windows.Controls.UserControl
         else
         {
             FuncScriptStatus.Foreground = new SolidColorBrush(Colors.IndianRed);
+        }
+    }
+
+    private void CurveEnabled_Checked(object sender, RoutedEventArgs e)
+    {
+        if (_currentFunction != null)
+        {
+            var checkBox = sender as CheckBox;
+            switch (checkBox?.Name)
+            {
+            case "XAxisEnabled": {
+                _currentFunction.SetAxisEnabled(">LinAccel_x", true);
+                break;
+            }
+            case "YAxisEnabled": {
+                _currentFunction.SetAxisEnabled(">LinAccel_y", true);
+                break;
+            }
+            case "ZAxisEnabled": {
+                _currentFunction.SetAxisEnabled(">LinAccel_z", true);
+                break;
+            }
+            case "ProximityEnabled": {
+                _currentFunction.SetAxisEnabled(">Proximity", true);
+                break;
+            }
+            }
+
+            UpdateEditingStatus();
+        }
+    }
+    private void CurveEnabled_Unchecked(object sender, RoutedEventArgs e)
+    {
+        if (_currentFunction != null)
+        {
+            var checkBox = sender as CheckBox;
+            switch (checkBox?.Name)
+            {
+            case "XAxisEnabled": {
+                _currentFunction.SetAxisEnabled(">LinAccel_x", false);
+                break;
+            }
+            case "YAxisEnabled": {
+                _currentFunction.SetAxisEnabled(">LinAccel_y", false);
+                break;
+            }
+            case "ZAxisEnabled": {
+                _currentFunction.SetAxisEnabled(">LinAccel_z", false);
+                break;
+            }
+            case "ProximityEnabled": {
+                _currentFunction.SetAxisEnabled(">Proximity", false);
+                break;
+            }
+            }
+
+            UpdateEditingStatus();
         }
     }
 }
