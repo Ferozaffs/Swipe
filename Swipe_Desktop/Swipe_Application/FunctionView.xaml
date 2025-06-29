@@ -97,7 +97,7 @@
                     </WrapPanel>
                     <WrapPanel>
                         <TextBlock
-                            Width="50"
+                            Width="75"
                             Margin="5"
                             FontSize="14"
                             Foreground="Gray"
@@ -115,7 +115,23 @@
                     </WrapPanel>
                     <WrapPanel>
                         <TextBlock
-                            Width="50"
+                            Width="75"
+                            Margin="5"
+                            FontSize="14"
+                            Foreground="Gray"
+                            Text="Interface:" />
+                        <ComboBox
+                            x:Name="FuncInterfaceCombo"
+                            Width="350"
+                            Margin="5"
+                            Background="#333333"
+                            BorderThickness="0"
+                            IsEnabled="False"
+                            SelectionChanged="FuncInterfaceCombo_SelectionChanged" />
+                    </WrapPanel>
+                    <WrapPanel>
+                        <TextBlock
+                            Width="75"
                             Margin="5"
                             FontSize="14"
                             Foreground="Gray"
@@ -132,12 +148,18 @@
                     <WrapPanel>
                         <StackPanel>
                             <TextBlock
-                                Width="50"
+                                Width="75"
                                 Margin="5"
                                 FontSize="14"
                                 Foreground="Gray"
                                 Text="Script:" />
-                            <Button Margin="2,10,0,0" Click="ScriptRun_Click">Run</Button>
+                            <Button
+                                Width="60"
+                                Margin="5,5,0,0"
+                                HorizontalAlignment="Left"
+                                Click="ScriptRun_Click">
+                                Run
+                            </Button>
                         </StackPanel>
                         <TextBox
                             x:Name="FuncCommandTextBox"
@@ -170,7 +192,34 @@
             </Grid>
         </StackPanel>
         <Canvas Height="2" Background="#333333" />
-        <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <StackPanel
+            x:Name="KeyboardPanel"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Visibility="Collapsed">
+            <WrapPanel>
+                <TextBlock
+                    Margin="5"
+                    FontSize="20"
+                    Foreground="Gray"
+                    Text="Bindings" />
+                <Button
+                    x:Name="BindKeysButton"
+                    Margin="10,0,0,0"
+                    Click="RecordButton_Click"
+                    Content="⬤"
+                    Style="{StaticResource FlatDarkButton}" />
+            </WrapPanel>
+        </StackPanel>
+        <StackPanel
+            x:Name="KeyboardBindsPanel"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Stretch" />
+        <StackPanel
+            x:Name="SwipeBandPanel"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Visibility="Collapsed">
             <WrapPanel>
                 <TextBlock
                     Margin="5"

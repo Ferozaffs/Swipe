@@ -2,6 +2,11 @@
 using LiveCharts;
 using System.Windows.Media;
 using Color = System.Windows.Media.Color;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Windows.Input;
+using System.Windows;
+using Swipe_Core;
 
 namespace Swipe_Application
 {
@@ -10,6 +15,30 @@ namespace Swipe_Application
 /// </summary>
 public partial class App : System.Windows.Application
 {
+    private const int WH_KEYBOARD_LL = 13;
+    private const int WM_KEYDOWN = 0x0100;
+    private const int WM_KEYUP = 0x0101;
+    private const int WM_SYSKEYDOWN = 0x0104;
+    private const int WM_SYSKEYUP = 0x0105;
+
+    private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+    private static LowLevelKeyboardProc _proc = HookCallback;
+    private static IntPtr _hookID = IntPtr.Zero;
+
+#region WinAPI Imports
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    [return:MarshalAs(UnmanagedType.Bool)]
+    private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    private static extern IntPtr GetModuleHandle(string lpModuleName);
+#endregion
 
     static public (CartesianChart, SeriesCollection)
         CreateGraph(string title, float max, float min, Color color, bool showLabels)
@@ -36,6 +65,58 @@ public partial class App : System.Windows.Application
 
         return (chart, sc);
     }
-}
 
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+        _hookID = SetHook(_proc);
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        UnhookWindowsHookEx(_hookID);
+        base.OnExit(e);
+    }
+
+    private static IntPtr SetHook(LowLevelKeyboardProc proc)
+    {
+        using (Process curProcess = Process.GetCurrentProcess()) using (ProcessModule curModule = curProcess.MainModule)
+        {
+            return SetWindowsHookEx(WH_KEYBOARD_LL, proc, GetModuleHandle(curModule.ModuleName), 0);
+        }
+    }
+
+    private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
+    {
+        if (nCode >= 0 && (wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN))
+        {
+            int vkCode = Marshal.ReadInt32(lParam);
+            KeyboardManager.AddKey((int)KeyInterop.KeyFromVirtualKey(vkCode));
+        }
+        else if (nCode >= 0 && (wParam == (IntPtr)WM_KEYUP || wParam == (IntPtr)WM_SYSKEYUP))
+        {
+            int vkCode = Marshal.ReadInt32(lParam);
+            KeyboardManager.RemoveKey((int)KeyInterop.KeyFromVirtualKey(vkCode));
+        }
+
+        return CallNextHookEx(_hookID, nCode, wParam, lParam);
+    }
+
+    public static string GetKeysAsText(SortedSet<int> keySet)
+    {
+        string text = "";
+        foreach (int key in keySet)
+        {
+            if (text.Length > 0)
+            {
+                text += " + ";
+            }
+
+            Key vk = (Key)key;
+            text += vk.ToString();
+        }
+
+        return text;
+    }
+}
 }

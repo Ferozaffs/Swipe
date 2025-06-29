@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Management.Automation;
+using Newtonsoft.Json;
 
 namespace Swipe_Core
 {
@@ -13,27 +12,28 @@ public class Function
         Powershell,
         Launch,
     }
+    public enum InterfaceType
+    {
+        Keyboard,
+        SwipeBand,
+    }
 
     public event Action<Function>? OnFunctionChange;
 
-    [JsonInclude]
+    [JsonProperty]
+    public Guid Guid { get; private set; } = Guid.NewGuid();
+    [JsonProperty]
     public bool IsEnabled { get; private set; } = true;
-    [JsonInclude]
+    [JsonProperty]
     public string Name { get; private set; } = "New Function";
-    [JsonInclude]
+    [JsonProperty]
     public FunctionType FuncType { get; private set; } = FunctionType.Powershell;
-    [JsonInclude]
+    [JsonProperty]
+    public InterfaceType Interface { get; private set; } = InterfaceType.Keyboard;
+    [JsonProperty]
     public string Command { get; private set; } = "";
-    [JsonInclude]
+    [JsonProperty]
     public int NumActivations { get; set; } = 0;
-    [JsonInclude]
-    public Dictionary<Guid, Dictionary<string, List<float>>> Recordings { get; private set; } =
-        new Dictionary<Guid, Dictionary<string, List<float>>>();
-    [JsonInclude]
-    public Dictionary<Guid, int> RecordingActivations { get; private set; } = new Dictionary<Guid, int>();
-    [JsonInclude]
-    public Dictionary<string, bool> AxisEnabled { get; private set; } = new Dictionary<string, bool> {
-        { ">LinAccel_x", true }, { ">LinAccel_y", true }, { ">LinAccel_z", true }, { ">Proximity", true } };
 
     public void Enable()
     {
@@ -61,6 +61,11 @@ public class Function
         FuncType = funcType;
         Save();
     }
+    public void SetInterfaceType(InterfaceType interfaceType)
+    {
+        Interface = interfaceType;
+        Save();
+    }
     public void SetPowershellCommand(string command)
     {
         Command = command;
@@ -71,33 +76,6 @@ public class Function
     {
         Command = exe;
         Save();
-    }
-
-    public Guid AddRecording(Dictionary<string, List<float>> recording)
-    {
-        var deepCopy = new Dictionary<string, List<float>>();
-
-        foreach (var graph in recording)
-        {
-            deepCopy[graph.Key] = new List<float>(graph.Value);
-        }
-
-        var guid = Guid.NewGuid();
-        Recordings.Add(guid, deepCopy);
-        RecordingActivations.Add(guid, 0);
-        Save();
-
-        return guid;
-    }
-
-    public void RemoveRecording(Guid guid)
-    {
-        if (Recordings.ContainsKey(guid))
-        {
-            Recordings.Remove(guid);
-            RecordingActivations.Remove(guid);
-            Save();
-        }
     }
 
     public string RunFunction()
@@ -147,14 +125,14 @@ public class Function
         }
         return "Disabled";
     }
-    private bool Save()
+    protected bool Save()
     {
         if (Name.Length == 0 || Name == "New Function")
         {
             return false;
         }
-
-        string json = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
+        string json =
+            JsonConvert.SerializeObject(this, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All });
 
         var filename = @"Functions\" + Name.Replace(" ", "_") + ".json";
         File.WriteAllText(filename, json);
@@ -175,20 +153,12 @@ public class Function
         try
         {
             string json = File.ReadAllText(fileInfo.FullName);
-            return JsonSerializer.Deserialize<Function>(json);
+            return JsonConvert.DeserializeObject<Function>(
+                json, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All });
         }
         catch
         {
             return null;
-        }
-    }
-
-    public void SetAxisEnabled(string axis, bool enabled)
-    {
-        if (AxisEnabled.ContainsKey(axis))
-        {
-            AxisEnabled[axis] = enabled;
-            Save();
         }
     }
 }

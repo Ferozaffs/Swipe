@@ -1,10 +1,7 @@
 ﻿using Swipe_Core;
-using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
 using System.Windows.Media;
-using Windows.UI.Text;
 using static Swipe_Core.Function;
 using CheckBox = System.Windows.Controls.CheckBox;
 using Color = System.Windows.Media.Color;
@@ -36,9 +33,12 @@ public partial class FunctionView : System.Windows.Controls.UserControl
             _functionManager = mainWindow.FunctionManager;
             _functionManager.OnFunctionChange += UpdateFunctionList;
             UpdateFunctionList(_functionManager.GetFunctions());
+
+            KeyboardManager.OnAllKeyReleased += KeyboardManager_OnKeyReleased;
         }
 
         FuncTypeCombo.ItemsSource = Enum.GetValues(typeof(FunctionType));
+        FuncInterfaceCombo.ItemsSource = Enum.GetValues(typeof(InterfaceType));
     }
 
     public void Unload()
@@ -47,6 +47,8 @@ public partial class FunctionView : System.Windows.Controls.UserControl
         {
             _collector.OnDetect -= HandleDetectCurves;
         }
+
+        KeyboardManager.OnAllKeyReleased -= KeyboardManager_OnKeyReleased;
     }
 
     public void UpdateEditingStatus()
@@ -56,11 +58,13 @@ public partial class FunctionView : System.Windows.Controls.UserControl
             FuncEnabledCheck.IsChecked = true;
             FuncNameTextBox.Text = "";
             FuncTypeCombo.SelectedItem = FunctionType.Powershell;
+            FuncInterfaceCombo.SelectedItem = InterfaceType.Keyboard;
             FuncCommandTextBox.Text = "";
 
             FuncEnabledCheck.IsEnabled = false;
             FuncNameTextBox.IsEnabled = false;
             FuncTypeCombo.IsEnabled = false;
+            FuncInterfaceCombo.IsEnabled = false;
             FuncCommandTextBox.IsEnabled = false;
         }
         else
@@ -68,93 +72,40 @@ public partial class FunctionView : System.Windows.Controls.UserControl
             FuncEnabledCheck.IsChecked = _currentFunction.IsEnabled;
             FuncNameTextBox.Text = _currentFunction.Name;
             FuncTypeCombo.SelectedItem = _currentFunction.FuncType;
+            FuncInterfaceCombo.SelectedItem = _currentFunction.Interface;
             FuncCommandTextBox.Text = _currentFunction.Command;
 
             FuncEnabledCheck.IsEnabled = true;
             FuncNameTextBox.IsEnabled = true;
             FuncTypeCombo.IsEnabled = true;
+            FuncInterfaceCombo.IsEnabled = true;
             FuncCommandTextBox.IsEnabled = true;
         }
 
-        UpdateRecordedCurves();
-    }
-
-    public void UpdateRecordedCurves()
-    {
-        byte activeStrength = 150;
-        byte inactiveStrength = 15;
-
-        RecordsPanel.Children.Clear();
-        if (_currentFunction != null)
+        if (_currentFunction is SwipeBandFunction)
         {
-            var count = 0;
-            foreach (var recording in _currentFunction.Recordings)
-            {
-                StackPanel stackPanel =
-                    new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal,
-                                     HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
-                                     VerticalAlignment = System.Windows.VerticalAlignment.Stretch };
-
-                var buttonStyle = (Style)System.Windows.Application.Current.Resources["FlatDarkButton"];
-                var fontWeight = FontWeights.Regular;
-                var delBtn = new System.Windows.Controls.Button { Content = "✖", Style = buttonStyle, FontSize = 14,
-                                                                  FontWeight = fontWeight };
-                delBtn.Click += (s, e) =>
-                {
-                    _currentFunction?.RemoveRecording(recording.Key);
-                    UpdateEditingStatus();
-                };
-                stackPanel.Children.Add(delBtn);
-
-                byte strength = _currentFunction.AxisEnabled[">LinAccel_x"] ? activeStrength : inactiveStrength;
-                var (graph, _) = App.CreateGraph(">LinAccel_x", 20, -20, Color.FromRgb(strength, 0, 0), true);
-                graph.Series.ElementAt(0).Values.Clear();
-                graph.Series.ElementAt(0).Values.AddRange(recording.Value[">LinAccel_x"].Cast<object>());
-                stackPanel.Children.Add(graph);
-
-                strength = _currentFunction.AxisEnabled[">LinAccel_y"] ? activeStrength : inactiveStrength;
-                (graph, _) = App.CreateGraph(">LinAccel_y", 20, -20, Color.FromRgb(0, strength, 0), true);
-                graph.Series.ElementAt(0).Values.Clear();
-                graph.Series.ElementAt(0).Values.AddRange(recording.Value[">LinAccel_y"].Cast<object>());
-                stackPanel.Children.Add(graph);
-
-                strength = _currentFunction.AxisEnabled[">LinAccel_z"] ? activeStrength : inactiveStrength;
-                (graph, _) = App.CreateGraph(">LinAccel_z", 20, -20, Color.FromRgb(0, 0, strength), true);
-                graph.Series.ElementAt(0).Values.Clear();
-                graph.Series.ElementAt(0).Values.AddRange(recording.Value[">LinAccel_z"].Cast<object>());
-                stackPanel.Children.Add(graph);
-
-                strength = _currentFunction.AxisEnabled[">Proximity"] ? activeStrength : inactiveStrength;
-                (graph, _) = App.CreateGraph(">Proximity", 50, 0, Color.FromRgb(strength, strength, 0), true);
-                graph.Series.ElementAt(0).Values.Clear();
-                graph.Series.ElementAt(0).Values.AddRange(recording.Value[">Proximity"].Cast<object>());
-                stackPanel.Children.Add(graph);
-
-                var numActivationsText =
-                    new TextBlock() { Text = "Activations:" + _currentFunction.RecordingActivations[recording.Key],
-                                      FontSize = 14,
-                                      Height = 24,
-                                      FontWeight = FontWeights.Bold,
-                                      Foreground = new SolidColorBrush(Colors.Gray),
-                                      Margin = new System.Windows.Thickness(20, 0, 0, 0) };
-                stackPanel.Children.Add(numActivationsText);
-
-                RecordsPanel.Children.Add(stackPanel);
-
-                count++;
-            }
+            SwipeBandPanel.Visibility = Visibility.Visible;
+            RecordsPanel.Visibility = Visibility.Visible;
+            KeyboardPanel.Visibility = Visibility.Collapsed;
+            KeyboardBindsPanel.Visibility = Visibility.Collapsed;
+            UpdateRecordedCurves();
+        }
+        else if (_currentFunction is KeyboardFunction)
+        {
+            SwipeBandPanel.Visibility = Visibility.Collapsed;
+            RecordsPanel.Visibility = Visibility.Collapsed;
+            KeyboardPanel.Visibility = Visibility.Visible;
+            KeyboardBindsPanel.Visibility = Visibility.Visible;
+            UpdateKeySets();
         }
     }
 
     private void RecordButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_collector != null)
+        if (sender is System.Windows.Controls.Button btn)
         {
-            if (sender is System.Windows.Controls.Button btn)
-            {
-                _record = !_record;
-                btn.Content = _record ? "◼" : "⬤";
-            }
+            _record = !_record;
+            btn.Content = _record ? "◼" : "⬤";
         }
     }
 
@@ -167,10 +118,12 @@ public partial class FunctionView : System.Windows.Controls.UserControl
                 return;
             }
 
-            if (_functionManager.GetFunctions().Count > 0 &&
-                _functionManager.GetFunctions().Last().Name == "New Function")
+            var nonConfiguredFunction =
+                _functionManager.GetFunctions().Values.FirstOrDefault(f => f.Name.Contains("New Function"));
+
+            if (nonConfiguredFunction != null)
             {
-                _currentFunction = _functionManager.GetFunctions().Last();
+                _currentFunction = nonConfiguredFunction;
                 UpdateFunctionList(_functionManager.GetFunctions());
                 UpdateEditingStatus();
                 return;
@@ -182,30 +135,7 @@ public partial class FunctionView : System.Windows.Controls.UserControl
         }
     }
 
-    private void HandleDetectCurves(Dictionary<string, List<float>> detectedCurves)
-    {
-        this.Dispatcher.Invoke(() =>
-                               {
-                                   if (_record == false)
-                                   {
-                                       return;
-                                   }
-
-                                   if (Visibility != Visibility.Visible)
-                                   {
-                                       _record = false;
-                                       return;
-                                   }
-
-                                   if (_functionManager != null && _currentFunction != null)
-                                   {
-                                       _currentFunction.AddRecording(detectedCurves);
-                                       UpdateEditingStatus();
-                                   }
-                               });
-    }
-
-    private void UpdateFunctionList(List<Function> functions)
+    private void UpdateFunctionList(Dictionary<Guid, Function> functions)
     {
         this.Dispatcher.Invoke(
             () =>
@@ -226,56 +156,55 @@ public partial class FunctionView : System.Windows.Controls.UserControl
 
                 if (_currentFunction == null)
                 {
-                    _currentFunction = functions.Last();
+                    _currentFunction = functions.Values.Last();
                     UpdateEditingStatus();
                 }
 
                 bool foundMatchingFunction = false;
-                for (int i = 0; i < functions.Count; i++)
+                foreach (var function in functions)
                 {
                     var fontWeight = FontWeights.Regular;
                     var color = Colors.Gray;
-                    if (functions[i] == _currentFunction)
+                    if (function.Key == _currentFunction.Guid)
                     {
                         foundMatchingFunction = true;
                         fontWeight = FontWeights.Bold;
                         color = Colors.LightGray;
                     }
-                    int index = i;
 
                     var delBtn = new System.Windows.Controls.Button { Content = "✖", Style = buttonStyle, FontSize = 10,
                                                                       Height = 24, FontWeight = fontWeight };
-                    delBtn.Click += (s, e) => _functionManager?.RemoveFunction(index);
+                    delBtn.Click += (s, e) => _functionManager?.RemoveFunction(function.Key);
                     FunctionDeleteColumn.Children.Add(delBtn);
 
-                    var funcName = new TextBlock { Text = functions[i].Name, Foreground = new SolidColorBrush(color),
+                    var funcName = new TextBlock { Text = function.Value.Name, Foreground = new SolidColorBrush(color),
                                                    FontSize = 14, Height = 24, FontWeight = fontWeight };
                     funcName.MouseLeftButtonDown += (s, e) =>
                     {
-                        _currentFunction = _functionManager.GetFunction(index);
+                        _currentFunction = _functionManager.GetFunction(function.Key);
                         UpdateFunctionList(_functionManager.GetFunctions());
                         UpdateEditingStatus();
                     };
 
                     FunctionNameColumn.Children.Add(funcName);
 
-                    var funcType = new TextBlock { Text = functions[i].FuncType.ToString(),
+                    var funcType = new TextBlock { Text = function.Value.FuncType.ToString(),
                                                    Foreground = new SolidColorBrush(color), FontSize = 14, Height = 24,
                                                    FontWeight = fontWeight };
                     funcType.MouseLeftButtonDown += (s, e) =>
                     {
-                        _currentFunction = _functionManager.GetFunction(index);
+                        _currentFunction = _functionManager.GetFunction(function.Key);
                         UpdateFunctionList(_functionManager.GetFunctions());
                         UpdateEditingStatus();
                     };
                     FunctionTypeColumn.Children.Add(funcType);
 
                     var funcDetails =
-                        new TextBlock { Text = functions[i].Command, Foreground = new SolidColorBrush(color),
+                        new TextBlock { Text = function.Value.Command, Foreground = new SolidColorBrush(color),
                                         FontSize = 8, Height = 24, FontWeight = fontWeight };
                     funcDetails.MouseLeftButtonDown += (s, e) =>
                     {
-                        _currentFunction = _functionManager.GetFunction(index);
+                        _currentFunction = _functionManager.GetFunction(function.Key);
                         UpdateFunctionList(_functionManager.GetFunctions());
                         UpdateEditingStatus();
                     };
@@ -322,6 +251,31 @@ public partial class FunctionView : System.Windows.Controls.UserControl
         }
     }
 
+    private void FuncInterfaceCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_functionManager != null)
+        {
+            var interfaceType = (InterfaceType)((System.Windows.Controls.ComboBox)sender).SelectedItem;
+
+            if (_currentFunction is SwipeBandFunction swipeBandFunction)
+            {
+                if (interfaceType == InterfaceType.Keyboard)
+                {
+                    _currentFunction = _functionManager.ConvertBandToKeyboard(swipeBandFunction);
+                    UpdateEditingStatus();
+                }
+            }
+            else if (_currentFunction is KeyboardFunction keyboardFunction)
+            {
+                if (interfaceType == InterfaceType.SwipeBand)
+                {
+                    _currentFunction = _functionManager.ConvertKeyboardToBand(keyboardFunction);
+                    UpdateEditingStatus();
+                }
+            }
+        }
+    }
+
     private void FuncCommandTextBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         if (_currentFunction != null)
@@ -360,28 +314,74 @@ public partial class FunctionView : System.Windows.Controls.UserControl
             FuncScriptStatus.Foreground = new SolidColorBrush(Colors.IndianRed);
         }
     }
+    private void KeyboardManager_OnKeyReleased(SortedSet<int> keys)
+    {
+        this.Dispatcher.Invoke(() =>
+                               {
+                                   if (_record == false)
+                                   {
+                                       return;
+                                   }
+
+                                   if (Visibility != Visibility.Visible)
+                                   {
+                                       _record = false;
+                                       return;
+                                   }
+
+                                   if (_currentFunction is KeyboardFunction keyboardFunction && keys.Count > 0)
+                                   {
+                                       keyboardFunction.AddKeySet(keys);
+                                       UpdateEditingStatus();
+                                   }
+                               });
+    }
+
+    private void HandleDetectCurves(Dictionary<string, List<float>> detectedCurves)
+    {
+        this.Dispatcher.Invoke(() =>
+                               {
+                                   if (_record == false)
+                                   {
+                                       return;
+                                   }
+
+                                   if (Visibility != Visibility.Visible)
+                                   {
+                                       _record = false;
+                                       return;
+                                   }
+
+                                   if (_functionManager != null &&
+                                       _currentFunction is SwipeBandFunction swipeBandFunction)
+                                   {
+                                       swipeBandFunction.AddRecording(detectedCurves);
+                                       UpdateEditingStatus();
+                                   }
+                               });
+    }
 
     private void CurveEnabled_Checked(object sender, RoutedEventArgs e)
     {
-        if (_currentFunction != null)
+        if (_currentFunction is SwipeBandFunction swipeBandFunction)
         {
             var checkBox = sender as CheckBox;
             switch (checkBox?.Name)
             {
             case "XAxisEnabled": {
-                _currentFunction.SetAxisEnabled(">LinAccel_x", true);
+                swipeBandFunction.SetAxisEnabled(">LinAccel_x", true);
                 break;
             }
             case "YAxisEnabled": {
-                _currentFunction.SetAxisEnabled(">LinAccel_y", true);
+                swipeBandFunction.SetAxisEnabled(">LinAccel_y", true);
                 break;
             }
             case "ZAxisEnabled": {
-                _currentFunction.SetAxisEnabled(">LinAccel_z", true);
+                swipeBandFunction.SetAxisEnabled(">LinAccel_z", true);
                 break;
             }
             case "ProximityEnabled": {
-                _currentFunction.SetAxisEnabled(">Proximity", true);
+                swipeBandFunction.SetAxisEnabled(">Proximity", true);
                 break;
             }
             }
@@ -391,30 +391,124 @@ public partial class FunctionView : System.Windows.Controls.UserControl
     }
     private void CurveEnabled_Unchecked(object sender, RoutedEventArgs e)
     {
-        if (_currentFunction != null)
+        if (_currentFunction is SwipeBandFunction swipeBandFunction)
         {
             var checkBox = sender as CheckBox;
             switch (checkBox?.Name)
             {
             case "XAxisEnabled": {
-                _currentFunction.SetAxisEnabled(">LinAccel_x", false);
+                swipeBandFunction.SetAxisEnabled(">LinAccel_x", false);
                 break;
             }
             case "YAxisEnabled": {
-                _currentFunction.SetAxisEnabled(">LinAccel_y", false);
+                swipeBandFunction.SetAxisEnabled(">LinAccel_y", false);
                 break;
             }
             case "ZAxisEnabled": {
-                _currentFunction.SetAxisEnabled(">LinAccel_z", false);
+                swipeBandFunction.SetAxisEnabled(">LinAccel_z", false);
                 break;
             }
             case "ProximityEnabled": {
-                _currentFunction.SetAxisEnabled(">Proximity", false);
+                swipeBandFunction.SetAxisEnabled(">Proximity", false);
                 break;
             }
             }
 
             UpdateEditingStatus();
+        }
+    }
+
+    public void UpdateKeySets()
+    {
+        KeyboardBindsPanel.Children.Clear();
+        if (_currentFunction is KeyboardFunction keyboardFunction)
+        {
+            foreach (var keySet in keyboardFunction.KeySets)
+            {
+                WrapPanel wrapPanel = new WrapPanel();
+
+                var buttonStyle = (Style)System.Windows.Application.Current.Resources["FlatDarkButton"];
+                var fontWeight = FontWeights.Regular;
+                var delBtn = new System.Windows.Controls.Button { Content = "✖", Style = buttonStyle, FontSize = 14,
+                                                                  FontWeight = fontWeight };
+                delBtn.Click += (s, e) =>
+                {
+                    keyboardFunction?.RemoveKeySet(keySet.Key);
+                    UpdateEditingStatus();
+                };
+                wrapPanel.Children.Add(delBtn);
+
+                var keysText = new TextBlock() { Text = App.GetKeysAsText(keySet.Value),
+                                                 FontSize = 14,
+                                                 Height = 24,
+                                                 FontWeight = FontWeights.Bold,
+                                                 Foreground = new SolidColorBrush(Colors.Gray),
+                                                 Margin = new System.Windows.Thickness(20, 0, 0, 0) };
+                wrapPanel.Children.Add(keysText);
+
+                KeyboardBindsPanel.Children.Add(wrapPanel);
+            }
+        }
+    }
+
+    public void UpdateRecordedCurves()
+    {
+        byte activeStrength = 150;
+        byte inactiveStrength = 15;
+
+        RecordsPanel.Children.Clear();
+        if (_currentFunction is SwipeBandFunction swipeBandFunction)
+        {
+            foreach (var recording in swipeBandFunction.Recordings)
+            {
+                WrapPanel wrapPanel = new WrapPanel();
+
+                var buttonStyle = (Style)System.Windows.Application.Current.Resources["FlatDarkButton"];
+                var fontWeight = FontWeights.Regular;
+                var delBtn = new System.Windows.Controls.Button { Content = "✖", Style = buttonStyle, FontSize = 14,
+                                                                  FontWeight = fontWeight };
+                delBtn.Click += (s, e) =>
+                {
+                    swipeBandFunction?.RemoveRecording(recording.Key);
+                    UpdateEditingStatus();
+                };
+                wrapPanel.Children.Add(delBtn);
+
+                byte strength = swipeBandFunction.AxisEnabled[">LinAccel_x"] ? activeStrength : inactiveStrength;
+                var (graph, _) = App.CreateGraph(">LinAccel_x", 20, -20, Color.FromRgb(strength, 0, 0), true);
+                graph.Series.ElementAt(0).Values.Clear();
+                graph.Series.ElementAt(0).Values.AddRange(recording.Value[">LinAccel_x"].Cast<object>());
+                wrapPanel.Children.Add(graph);
+
+                strength = swipeBandFunction.AxisEnabled[">LinAccel_y"] ? activeStrength : inactiveStrength;
+                (graph, _) = App.CreateGraph(">LinAccel_y", 20, -20, Color.FromRgb(0, strength, 0), true);
+                graph.Series.ElementAt(0).Values.Clear();
+                graph.Series.ElementAt(0).Values.AddRange(recording.Value[">LinAccel_y"].Cast<object>());
+                wrapPanel.Children.Add(graph);
+
+                strength = swipeBandFunction.AxisEnabled[">LinAccel_z"] ? activeStrength : inactiveStrength;
+                (graph, _) = App.CreateGraph(">LinAccel_z", 20, -20, Color.FromRgb(0, 0, strength), true);
+                graph.Series.ElementAt(0).Values.Clear();
+                graph.Series.ElementAt(0).Values.AddRange(recording.Value[">LinAccel_z"].Cast<object>());
+                wrapPanel.Children.Add(graph);
+
+                strength = swipeBandFunction.AxisEnabled[">Proximity"] ? activeStrength : inactiveStrength;
+                (graph, _) = App.CreateGraph(">Proximity", 50, 0, Color.FromRgb(strength, strength, 0), true);
+                graph.Series.ElementAt(0).Values.Clear();
+                graph.Series.ElementAt(0).Values.AddRange(recording.Value[">Proximity"].Cast<object>());
+                wrapPanel.Children.Add(graph);
+
+                var numActivationsText =
+                    new TextBlock() { Text = "Activations:" + swipeBandFunction.RecordingActivations[recording.Key],
+                                      FontSize = 14,
+                                      Height = 24,
+                                      FontWeight = FontWeights.Bold,
+                                      Foreground = new SolidColorBrush(Colors.Gray),
+                                      Margin = new System.Windows.Thickness(20, 0, 0, 0) };
+                wrapPanel.Children.Add(numActivationsText);
+
+                RecordsPanel.Children.Add(wrapPanel);
+            }
         }
     }
 }
