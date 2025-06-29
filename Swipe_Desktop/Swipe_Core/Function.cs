@@ -10,6 +10,7 @@ public class Function
     public enum FunctionType
     {
         Powershell,
+        PowershellScript,
         Launch,
     }
     public enum InterfaceType
@@ -71,6 +72,11 @@ public class Function
         Command = command;
         Save();
     }
+    public void SetPowershellScriptPath(string exe)
+    {
+        Command = exe;
+        Save();
+    }
 
     public void SetExe(string exe)
     {
@@ -114,11 +120,23 @@ public class Function
                     }
                 }
                 break;
-            case FunctionType.Launch:
+            case FunctionType.PowershellScript: {
+                ProcessStartInfo startInfo =
+                    new ProcessStartInfo() { FileName = "powershell.exe",
+                                             Arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{Command}\"",
+                                             UseShellExecute = false,
+                                             RedirectStandardOutput = false,
+                                             RedirectStandardError = false,
+                                             CreateNoWindow = true };
+                Process.Start(startInfo);
+                break;
+            }
+            case FunctionType.Launch: {
                 ProcessStartInfo start = new ProcessStartInfo();
                 start.FileName = Command;
                 Process.Start(start);
                 break;
+            }
             }
 
             return "Success";

@@ -296,6 +296,11 @@ public partial class FunctionView : System.Windows.Controls.UserControl
             f.SetPowershellCommand(FuncCommandTextBox.Text);
             break;
         }
+        case FunctionType.PowershellScript: {
+
+            f.SetPowershellScriptPath(FuncCommandTextBox.Text);
+            break;
+        }
         case FunctionType.Launch: {
 
             f.SetExe(FuncCommandTextBox.Text);
