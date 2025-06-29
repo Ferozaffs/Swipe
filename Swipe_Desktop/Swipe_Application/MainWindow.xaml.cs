@@ -26,6 +26,8 @@ public partial class MainWindow : Window
         InitializeComponent();
         Closing += MainWindow_Closing;
 
+        Directory.CreateDirectory(@"Functions");
+
         _btReader = new BluetoothReader();
         _btReader.OnConnection += UpdateConnectionStatus;
         _btReader.Initialize();

@@ -150,7 +150,8 @@ public class Function
             return false;
         }
         string json =
-            JsonConvert.SerializeObject(this, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All });
+            JsonConvert.SerializeObject(this, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All,
+                                                                           Formatting = Formatting.Indented });
 
         var filename = @"Functions\" + Name.Replace(" ", "_") + ".json";
         File.WriteAllText(filename, json);

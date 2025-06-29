@@ -28,4 +28,16 @@
     <ProjectReference Include="..\Swipe_Core\Swipe_Core.csproj" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <Target Name="PublishSingleFileAfterBuild" AfterTargets="Build" Condition="'$(Configuration)' == 'Release' AND '$(IsPublishing)' != 'true'">
+    <Exec Command="dotnet publish $(ProjectPath) -c Release -r win-x64 /p:PublishSingleFile=true /p:SelfContained=true /p:PublishReadyToRun=false /p:IncludeAllContentForSelfExtract=true /p:IsPublishing=true" />
+  </Target>
+
 </Project>
