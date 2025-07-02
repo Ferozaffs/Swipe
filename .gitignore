@@ -39,3 +39,76 @@ obj/
 TestEnvironment/
 Properties/
 
+
+# KiCad project files to ignore
+
+# Backup and autosave files
+*.bak
+*.kicad_pcb-bak
+*.sch-bak
+*-save.pro
+*-save.kicad_pro
+*-save.kicad_sch
+*-save.kicad_pcb
+*.tmp
+*.tmp.*
+
+# Swap files
+*.swp
+
+# User-specific configuration
+*.kicad_prl
+*.kicad_sch-prl
+*.kicad_sym-prl
+
+# Simulation data
+pspice/
+
+# Export and fabrication output
+*.pdf
+*.svg
+*.dxf
+*.png
+*.jpeg
+*.jpg
+*.gbr
+*.gtl
+*.gts
+*.gto
+*.gbl
+*.gbo
+*.gbp
+*.gbs
+*.gml
+*.gko
+*.drd
+*.drl
+*.pos
+*.csv
+*.zip
+*.tar.gz
+*.tar.xz
+*.7z
+
+# 3D models
+*.step
+*.stp
+*.wrl
+
+# Project specific builds or outputs
+/build/
+*.cache
+*.out
+*.log
+*.net
+*.xml
+*.rpt
+
+# Ignore all files in __pycache__ directories (if using scripting)
+__pycache__/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+gerbers
