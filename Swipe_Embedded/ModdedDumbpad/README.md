@@ -1,4 +1,4 @@
-# dumbpad - Hotswap - RGB (aka v3x)
+# dumbpad - ESP32 mod
 
 Original designed by [deveth0](https://www.github.com/deveth0).
 

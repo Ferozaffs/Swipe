@@ -7,70 +7,87 @@ namespace Swipe_Core.Readers
 public class COMReader : IDataReader
 {
     public event Action<string>? OnUpdated;
+    public event Action<bool>? OnConnection;
 
-    private string cachedData = "";
-    private SerialPort? serialPort;
-    private Thread? serialThread;
-    private bool serialThreadActive;
-    private StringBuilder serialbuffer = new StringBuilder();
+    private SerialPort? _serialPort;
+    private Thread? _serialThread;
+    private bool _serialThreadActive;
+    private StringBuilder _serialbuffer = new StringBuilder();
 
     public COMReader(string COMPort, int Baud = 115200)
     {
-        serialPort = new SerialPort(COMPort, Baud);
-
-        try
-        {
-            serialPort.Handshake = Handshake.None;
-            serialPort.DtrEnable = true;
-            serialPort.ReceivedBytesThreshold = 20;
-            serialPort.ReadBufferSize = 8192;
-            serialPort.Open();
-
-            Debug.WriteLine($"COM opened");
-
-            serialThreadActive = true;
-            serialThread = new Thread(SerialRead);
-            serialThread.Start();
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Error: {ex.Message}");
-        }
+        _serialPort = new SerialPort(COMPort, Baud);
     }
 
-    public void StopCom()
+    public async Task<bool> Start()
     {
-        if (serialPort != null)
+        await Task.CompletedTask;
+
+        if (_serialPort != null)
         {
-            serialThreadActive = false;
-            serialThread?.Join();
-            if (serialPort.IsOpen)
+            try
             {
-                serialPort.Close();
+                _serialPort.Handshake = Handshake.None;
+                _serialPort.DtrEnable = true;
+                _serialPort.ReceivedBytesThreshold = 20;
+                _serialPort.ReadBufferSize = 8192;
+                _serialPort.Open();
+
+                Debug.WriteLine($"COM opened");
+
+                _serialThreadActive = true;
+                _serialThread = new Thread(SerialRead);
+                _serialThread.Start();
+                OnConnection?.Invoke(true);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error: {ex.Message}");
+                OnConnection?.Invoke(false);
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    public bool Stop()
+    {
+        if (_serialPort != null)
+        {
+            _serialThreadActive = false;
+            _serialThread?.Join();
+            if (_serialPort.IsOpen)
+            {
+                _serialPort.Close();
             }
             Debug.WriteLine("COM closed");
+            OnConnection?.Invoke(false);
         }
+
+        return true;
     }
 
     private void SerialRead()
     {
-        while (serialThreadActive && serialPort != null)
+        while (_serialThreadActive && _serialPort != null)
         {
-            while (serialPort.BytesToRead > 0 && serialThreadActive)
+            while (_serialPort.BytesToRead > 0 && _serialThreadActive)
             {
-                int data = serialPort.ReadByte();
+                int data = _serialPort.ReadByte();
                 if (data == '\n' || data == '\r') // End of line
                 {
-                    string line = serialbuffer.ToString();
+                    string line = _serialbuffer.ToString();
                     if (!string.IsNullOrEmpty(line))
                     {
                         OnUpdated?.Invoke(line);
-                        serialbuffer.Clear();
+                        _serialbuffer.Clear();
                     }
                 }
                 else
                 {
-                    serialbuffer.Append((char)data);
+                    _serialbuffer.Append((char)data);
                 }
             }
         }

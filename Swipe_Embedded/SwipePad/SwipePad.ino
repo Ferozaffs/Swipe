@@ -43,6 +43,8 @@ String getPinState() {
 void setup() {  
   Serial.begin(115200);
 
+          Serial1.begin(9600, SERIAL_8N1, 9, 10); // Common UART1 pins
+
   setupPins();
 
   if (!BLE.begin()) {
@@ -77,5 +79,7 @@ void loop() {
     else {
       Serial.println(getPinState());
       delay(10);
+
+  Serial1.println("Hello from ESP32 UART1");
     }
 }

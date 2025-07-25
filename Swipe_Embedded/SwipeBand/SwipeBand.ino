@@ -13,8 +13,8 @@
 
 CodeCell cell;
 
-BLEService bleService("156F");
-BLEStringCharacteristic bleCharacteristic("2C19", BLERead | BLENotify, 96);
+BLEService bleService("13de80c4-cdd2-496e-901d-6537ea44f3d8");
+BLEStringCharacteristic bleCharacteristic("b6fe5a0e-ff8d-494a-8885-143cda0100ea", BLERead | BLENotify, 96);
 
 void setup() {
 #ifdef DEBUG

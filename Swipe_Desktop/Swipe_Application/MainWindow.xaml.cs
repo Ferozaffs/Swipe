@@ -7,6 +7,10 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using System.IO;
 using System.Reflection;
+using Windows.Devices.PointOfService;
+using Windows.Devices.HumanInterfaceDevice;
+using Swipe_Core.Devices;
+using Swipe_Core.Functions;
 
 namespace Swipe_Application
 {
@@ -15,10 +19,10 @@ namespace Swipe_Application
 /// </summary>
 public partial class MainWindow : Window
 {
-    public CurveCollector CurveCollector { get; }
     public FunctionManager FunctionManager { get; }
     // private COMReader? _comReader;
-    private BluetoothReader? _btReader;
+    private BandDevice? _bandDevice;
+    private PadDevice? _padDevice;
     private NotifyIcon _notifyIcon;
 
     public MainWindow()
@@ -28,49 +32,61 @@ public partial class MainWindow : Window
 
         Directory.CreateDirectory(@"Functions");
 
-        _btReader = new BluetoothReader();
-        _btReader.OnConnection += UpdateConnectionStatus;
-        _btReader.Initialize();
-        // _comReader = new COMReader("COM7", 115200);
+        _bandDevice = new BandDevice(IDataReader.ReaderType.Bluetooth);
+        _padDevice = new PadDevice(IDataReader.ReaderType.Bluetooth);
 
-        CurveCollector = new CurveCollector(_btReader);
-        CurveCollector.AddKeyValueTracker(">LinAccel_x", 4.0f);
-        CurveCollector.AddKeyValueTracker(">LinAccel_y", 4.0f);
-        CurveCollector.AddKeyValueTracker(">LinAccel_z", 4.0f);
-        CurveCollector.AddKeyValueTracker(">Proximity", 5000.0f);
+        _bandDevice.OnConnection += UpdateBandConnectionStatus;
+        _bandDevice.OnStatus += UpdateBandDataStatus;
+        _padDevice.OnConnection += UpdatePadConnectionStatus;
 
-        CurveCollector.OnStatus += UpdateDeviceStatus;
+        _bandDevice.Start();
+        _padDevice.Start();
 
-        FunctionManager = new FunctionManager(CurveCollector);
+        FunctionManager = new FunctionManager(_bandDevice, _padDevice);
 
         _notifyIcon = new NotifyIcon();
         string resourceName = "Swipe_Application.Icon1.ico";
-        using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
+
+        Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
+        if (stream != null)
         {
             _notifyIcon.Icon = new Icon(stream);
         }
         _notifyIcon.Visible = true;
         _notifyIcon.Text = "Swipe";
 
-        _notifyIcon.DoubleClick += _notifyIcon_ShowWindow;
+        _notifyIcon.DoubleClick += ShowWindow;
+    }
+
+    public CurveCollector? GetCurveCollector()
+    {
+        if (_bandDevice != null && _bandDevice.CurveCollector != null)
+        {
+            return _bandDevice.CurveCollector;
+        }
+
+        return null;
     }
 
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
         _notifyIcon.Dispose();
 
-        CurveCollector.OnStatus -= UpdateDeviceStatus;
-        if (_btReader != null)
+        if (_bandDevice != null)
         {
-            _btReader.OnConnection -= UpdateConnectionStatus;
+            _bandDevice.OnConnection -= UpdateBandConnectionStatus;
+            _bandDevice.OnStatus -= UpdateBandDataStatus;
+            _bandDevice.Stop();
+        }
+        if (_padDevice != null)
+        {
+            _padDevice.OnConnection -= UpdatePadConnectionStatus;
+            _padDevice.Stop();
         }
 
         HomeViewControl.Unload();
         FunctionViewControl.Unload();
         DataViewControl.Unload();
-
-        _btReader?.Stop();
-        //_comReader?.StopCom();
     }
 
     protected override void OnStateChanged(EventArgs e)
@@ -83,7 +99,7 @@ public partial class MainWindow : Window
         base.OnStateChanged(e);
     }
 
-    private void _notifyIcon_ShowWindow(object? sender, EventArgs e)
+    private void ShowWindow(object? sender, EventArgs e)
     {
         Show();
         WindowState = WindowState.Normal;
@@ -118,55 +134,72 @@ public partial class MainWindow : Window
         FunctionManager.IsExecutionEnabled = true;
     }
 
-    private void RecalibrateButton_Click(object sender, RoutedEventArgs e)
+    private void RecalibrateBandButton_Click(object sender, RoutedEventArgs e)
     {
-        if (CurveCollector != null)
+        if (_bandDevice != null && _bandDevice.CurveCollector != null)
         {
-            CurveCollector.Recalibrate();
+            _bandDevice.CurveCollector.Recalibrate();
         }
     }
 
-    private void ConnectionBtn_Click(object sender, RoutedEventArgs e)
+    private void ConnectionBandButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_btReader != null)
+        if (_bandDevice != null)
         {
-            _btReader.Connect();
+            _bandDevice.Connect();
         }
     }
 
-    private void UpdateConnectionStatus(bool connectionStatus)
+    private void UpdateBandConnectionStatus(bool connectionStatus)
     {
         this.Dispatcher.Invoke(() =>
                                {
                                    if (connectionStatus)
                                    {
-                                       ConnectionBtn.Foreground = new SolidColorBrush(Colors.LightGreen);
-                                       ConnectionBtn.Content = "✓";
+                                       BandConnectionBtn.Foreground = new SolidColorBrush(Colors.LightGreen);
+                                       BandConnectionBtn.Content = "✓";
                                    }
                                    else
                                    {
-                                       ConnectionBtn.Foreground = new SolidColorBrush(Colors.IndianRed);
-                                       ConnectionBtn.Content = "⟳";
-                                       DeviceStatusText.Foreground = new SolidColorBrush(Colors.Gray);
+                                       BandConnectionBtn.Foreground = new SolidColorBrush(Colors.IndianRed);
+                                       BandConnectionBtn.Content = "⟳";
+                                       BandDataStatusText.Foreground = new SolidColorBrush(Colors.Gray);
                                    }
                                });
     }
 
-    private void UpdateDeviceStatus(CurveCollector.Status status)
+    private void UpdatePadConnectionStatus(bool connectionStatus)
+    {
+        this.Dispatcher.Invoke(() =>
+                               {
+                                   if (connectionStatus)
+                                   {
+                                       PadConnectionBtn.Foreground = new SolidColorBrush(Colors.LightGreen);
+                                       PadConnectionBtn.Content = "✓";
+                                   }
+                                   else
+                                   {
+                                       PadConnectionBtn.Foreground = new SolidColorBrush(Colors.IndianRed);
+                                       PadConnectionBtn.Content = "⟳";
+                                   }
+                               });
+    }
+
+    private void UpdateBandDataStatus(CurveCollector.Status status)
     {
         this.Dispatcher.Invoke(() =>
                                {
                                    if (status == CurveCollector.Status.Anomaly)
                                    {
-                                       DeviceStatusText.Foreground = new SolidColorBrush(Colors.IndianRed);
+                                       BandDataStatusText.Foreground = new SolidColorBrush(Colors.IndianRed);
                                    }
                                    else if (status == CurveCollector.Status.Calibrating)
                                    {
-                                       DeviceStatusText.Foreground = new SolidColorBrush(Colors.LightYellow);
+                                       BandDataStatusText.Foreground = new SolidColorBrush(Colors.LightYellow);
                                    }
                                    else
                                    {
-                                       DeviceStatusText.Foreground = new SolidColorBrush(Colors.LightGreen);
+                                       BandDataStatusText.Foreground = new SolidColorBrush(Colors.LightGreen);
                                    }
                                });
     }

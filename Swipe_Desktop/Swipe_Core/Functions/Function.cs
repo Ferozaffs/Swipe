@@ -2,7 +2,7 @@
 using System.Management.Automation;
 using Newtonsoft.Json;
 
-namespace Swipe_Core
+namespace Swipe_Core.Functions
 {
 
 public class Function
@@ -16,7 +16,8 @@ public class Function
     public enum InterfaceType
     {
         Keyboard,
-        SwipeBand,
+        Band,
+        Pad,
     }
 
     public event Action<Function>? OnFunctionChange;

@@ -46,9 +46,12 @@ public partial class DataView : UserControl
         var mainWindow = Utils.FindParent<MainWindow>(this);
         if (mainWindow != null)
         {
-            _collector = mainWindow.CurveCollector;
-            _collector.OnUpdated += UpdateGraphs;
-            _collector.OnDetect += UpdateDetectGraphs;
+            _collector = mainWindow.GetCurveCollector();
+            if (_collector != null)
+            {
+                _collector.OnUpdated += UpdateGraphs;
+                _collector.OnDetect += UpdateDetectGraphs;
+            }
         }
     }
 

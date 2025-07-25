@@ -1,8 +1,9 @@
 ﻿using Swipe_Core;
+using Swipe_Core.Functions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using static Swipe_Core.Function;
+using static Swipe_Core.Functions.Function;
 using CheckBox = System.Windows.Controls.CheckBox;
 using Color = System.Windows.Media.Color;
 
@@ -12,7 +13,7 @@ public partial class FunctionView : System.Windows.Controls.UserControl
 {
     private bool _record = false;
 
-    private CurveCollector? _collector = null;
+    private CurveCollector? _curveCollector = null;
     private FunctionManager? _functionManager = null;
     private Function? _currentFunction = null;
 
@@ -27,8 +28,11 @@ public partial class FunctionView : System.Windows.Controls.UserControl
         var mainWindow = Utils.FindParent<MainWindow>(this);
         if (mainWindow != null)
         {
-            _collector = mainWindow.CurveCollector;
-            _collector.OnDetect += HandleDetectCurves;
+            _curveCollector = mainWindow.GetCurveCollector();
+            if (_curveCollector != null)
+            {
+                _curveCollector.OnDetect += HandleDetectCurves;
+            }
 
             _functionManager = mainWindow.FunctionManager;
             _functionManager.OnFunctionChange += UpdateFunctionList;
@@ -43,9 +47,9 @@ public partial class FunctionView : System.Windows.Controls.UserControl
 
     public void Unload()
     {
-        if (_collector != null)
+        if (_curveCollector != null)
         {
-            _collector.OnDetect -= HandleDetectCurves;
+            _curveCollector.OnDetect -= HandleDetectCurves;
         }
 
         KeyboardManager.OnAllKeyReleased -= KeyboardManager_OnKeyReleased;
@@ -82,7 +86,7 @@ public partial class FunctionView : System.Windows.Controls.UserControl
             FuncCommandTextBox.IsEnabled = true;
         }
 
-        if (_currentFunction is SwipeBandFunction)
+        if (_currentFunction is BandFunction)
         {
             SwipeBandPanel.Visibility = Visibility.Visible;
             RecordsPanel.Visibility = Visibility.Visible;
@@ -140,6 +144,11 @@ public partial class FunctionView : System.Windows.Controls.UserControl
         this.Dispatcher.Invoke(
             () =>
             {
+                if (_functionManager == null)
+                {
+                    return;
+                }
+
                 FunctionDeleteColumn.Children.Clear();
                 FunctionNameColumn.Children.Clear();
                 FunctionTypeColumn.Children.Clear();
@@ -174,7 +183,7 @@ public partial class FunctionView : System.Windows.Controls.UserControl
 
                     var delBtn = new System.Windows.Controls.Button { Content = "✖", Style = buttonStyle, FontSize = 10,
                                                                       Height = 24, FontWeight = fontWeight };
-                    delBtn.Click += (s, e) => _functionManager?.RemoveFunction(function.Key);
+                    delBtn.Click += (s, e) => _functionManager.RemoveFunction(function.Key);
                     FunctionDeleteColumn.Children.Add(delBtn);
 
                     var funcName = new TextBlock { Text = function.Value.Name, Foreground = new SolidColorBrush(color),
@@ -257,7 +266,7 @@ public partial class FunctionView : System.Windows.Controls.UserControl
         {
             var interfaceType = (InterfaceType)((System.Windows.Controls.ComboBox)sender).SelectedItem;
 
-            if (_currentFunction is SwipeBandFunction swipeBandFunction)
+            if (_currentFunction is BandFunction swipeBandFunction)
             {
                 if (interfaceType == InterfaceType.Keyboard)
                 {
@@ -267,7 +276,7 @@ public partial class FunctionView : System.Windows.Controls.UserControl
             }
             else if (_currentFunction is KeyboardFunction keyboardFunction)
             {
-                if (interfaceType == InterfaceType.SwipeBand)
+                if (interfaceType == InterfaceType.Band)
                 {
                     _currentFunction = _functionManager.ConvertKeyboardToBand(keyboardFunction);
                     UpdateEditingStatus();
@@ -286,7 +295,7 @@ public partial class FunctionView : System.Windows.Controls.UserControl
 
     private void ScriptRun_Click(object sender, RoutedEventArgs e)
     {
-        Swipe_Core.Function f = new Function();
+        Function f = new Function();
         f.SetName(FuncNameTextBox.Text);
         f.SetFunctionType((FunctionType)FuncTypeCombo.SelectedItem);
         switch (f.FuncType)
@@ -357,8 +366,7 @@ public partial class FunctionView : System.Windows.Controls.UserControl
                                        return;
                                    }
 
-                                   if (_functionManager != null &&
-                                       _currentFunction is SwipeBandFunction swipeBandFunction)
+                                   if (_functionManager != null && _currentFunction is BandFunction swipeBandFunction)
                                    {
                                        swipeBandFunction.AddRecording(detectedCurves);
                                        UpdateEditingStatus();
@@ -368,7 +376,7 @@ public partial class FunctionView : System.Windows.Controls.UserControl
 
     private void CurveEnabled_Checked(object sender, RoutedEventArgs e)
     {
-        if (_currentFunction is SwipeBandFunction swipeBandFunction)
+        if (_currentFunction is BandFunction swipeBandFunction)
         {
             var checkBox = sender as CheckBox;
             switch (checkBox?.Name)
@@ -396,7 +404,7 @@ public partial class FunctionView : System.Windows.Controls.UserControl
     }
     private void CurveEnabled_Unchecked(object sender, RoutedEventArgs e)
     {
-        if (_currentFunction is SwipeBandFunction swipeBandFunction)
+        if (_currentFunction is BandFunction swipeBandFunction)
         {
             var checkBox = sender as CheckBox;
             switch (checkBox?.Name)
@@ -462,7 +470,7 @@ public partial class FunctionView : System.Windows.Controls.UserControl
         byte inactiveStrength = 15;
 
         RecordsPanel.Children.Clear();
-        if (_currentFunction is SwipeBandFunction swipeBandFunction)
+        if (_currentFunction is BandFunction swipeBandFunction)
         {
             foreach (var recording in swipeBandFunction.Recordings)
             {

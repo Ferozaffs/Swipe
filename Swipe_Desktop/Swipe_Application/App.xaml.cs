@@ -80,10 +80,19 @@ public partial class App : System.Windows.Application
 
     private static IntPtr SetHook(LowLevelKeyboardProc proc)
     {
-        using (Process curProcess = Process.GetCurrentProcess()) using (ProcessModule curModule = curProcess.MainModule)
+        Process? curProcess = Process.GetCurrentProcess();
+        if (curProcess != null)
         {
-            return SetWindowsHookEx(WH_KEYBOARD_LL, proc, GetModuleHandle(curModule.ModuleName), 0);
+            ProcessModule? curModule = curProcess.MainModule;
+            if (curModule != null)
+            {
+                return SetWindowsHookEx(WH_KEYBOARD_LL, proc, GetModuleHandle(curModule.ModuleName), 0);
+            }
+
+            return IntPtr.Zero;
         }
+
+        return IntPtr.Zero;
     }
 
     private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)

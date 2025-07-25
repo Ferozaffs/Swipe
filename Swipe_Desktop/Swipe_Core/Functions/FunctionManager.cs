@@ -1,8 +1,9 @@
 ﻿using FastDtw.CSharp;
+using Swipe_Core.Devices;
 using System;
 using System.Diagnostics;
 
-namespace Swipe_Core
+namespace Swipe_Core.Functions
 {
 public class FunctionManager
 {
@@ -10,23 +11,37 @@ public class FunctionManager
     public bool IsExecutionEnabled = true;
 
     private Dictionary<Guid, Function> _functions = new Dictionary<Guid, Function>();
-    private CurveCollector? _collector = null;
+    private BandDevice? _bandDevice = null;
+    private PadDevice? _padDevice = null;
     private float DTWThreshold = 2.25f;
 
-    public FunctionManager(CurveCollector collector)
+    public FunctionManager(BandDevice? bandDevice, PadDevice? padDevice)
     {
         LoadFunctions();
-        _collector = collector;
-        _collector.OnDetect += EvalutateDetectedCurves;
+        if (bandDevice != null && bandDevice.CurveCollector != null)
+        {
+            _bandDevice = bandDevice;
+            _bandDevice.CurveCollector.OnDetect += EvalutateDetectedCurves;
+        }
+        if (padDevice != null)
+        {
+            _padDevice = padDevice;
+            _padDevice.OnKeyPressed += EvaluatePadClick;
+        }
         KeyboardManager.OnKeyPressed += EvaluateHeldKeys;
         KeyboardManager.OnKeyReleased += ResetKeyboardFunctions;
     }
 
     public void Unload()
     {
-        if (_collector != null)
+        if (_bandDevice != null && _bandDevice.CurveCollector != null)
         {
-            _collector.OnDetect -= EvalutateDetectedCurves;
+            _bandDevice.CurveCollector.OnDetect -= EvalutateDetectedCurves;
+        }
+
+        if (_padDevice != null)
+        {
+            _padDevice.OnKeyPressed -= EvaluatePadClick;
         }
 
         KeyboardManager.OnKeyPressed -= EvaluateHeldKeys;
@@ -130,11 +145,11 @@ public class FunctionManager
             return;
         }
 
-        List<(SwipeBandFunction, float, List<(Guid, float)>)> functionDtws =
-            new List<(SwipeBandFunction, float, List<(Guid, float)>)>();
+        List<(BandFunction, float, List<(Guid, float)>)> functionDtws =
+            new List<(BandFunction, float, List<(Guid, float)>)>();
         foreach (var function in _functions)
         {
-            var swipeBandFunction = function.Value as SwipeBandFunction;
+            var swipeBandFunction = function.Value as BandFunction;
             if (swipeBandFunction == null || swipeBandFunction.IsEnabled == false ||
                 swipeBandFunction.Recordings.Count == 0)
             {
@@ -161,7 +176,7 @@ public class FunctionManager
                         double[] a = curve.Value.Select(f => (double)f).ToArray();
                         double[] b = values.Select(f => (double)f).ToArray();
 
-                        var d = (float)FastDtw.CSharp.Dtw.GetScore(a, b, NormalizationType.PathLength);
+                        var d = (float)Dtw.GetScore(a, b, NormalizationType.PathLength);
 
                         dtw += d;
                     }
@@ -192,39 +207,66 @@ public class FunctionManager
             }
         }
     }
-
-    public SwipeBandFunction ConvertKeyboardToBand(KeyboardFunction keyboardFunction)
+    private void EvaluatePadClick(PadDevice.PadKey key)
     {
-        var swipeBandFunction = new SwipeBandFunction();
-        foreach (var prop in typeof(Function).GetProperties())
+        if (!IsExecutionEnabled || _functions.Count == 0)
         {
-            if (prop.CanRead && prop.CanWrite)
-            {
-                var value = prop.GetValue(keyboardFunction);
-                prop.SetValue(swipeBandFunction, value);
-            }
+            return;
         }
 
-        swipeBandFunction.SetInterfaceType(Function.InterfaceType.SwipeBand);
-        ReplaceFunction(swipeBandFunction);
-        return swipeBandFunction;
+        foreach (var function in _functions)
+        {
+            var padFunction = function.Value as PadFunction;
+            if (padFunction != null && padFunction.IsEnabled)
+            {
+                padFunction.EvaluateAndRun(key);
+            }
+        }
     }
 
-    public KeyboardFunction ConvertBandToKeyboard(SwipeBandFunction swipeBandFunction)
+    public TTarget ConvertFunction<TSource, TTarget>(TSource source, Function.InterfaceType targetType)
+        where TSource : Function
+        where TTarget : Function, new()
     {
-        var keyboardFunction = new KeyboardFunction();
+        var target = new TTarget();
+
         foreach (var prop in typeof(Function).GetProperties())
         {
             if (prop.CanRead && prop.CanWrite)
             {
-                var value = prop.GetValue(swipeBandFunction);
-                prop.SetValue(keyboardFunction, value);
+                var value = prop.GetValue(source);
+                prop.SetValue(target, value);
             }
         }
 
-        keyboardFunction.SetInterfaceType(Function.InterfaceType.Keyboard);
-        ReplaceFunction(keyboardFunction);
-        return keyboardFunction;
+        target.SetInterfaceType(targetType);
+        ReplaceFunction(target);
+        return target;
+    }
+
+    public BandFunction ConvertKeyboardToBand(KeyboardFunction keyboardFunction)
+    {
+        return ConvertFunction<KeyboardFunction, BandFunction>(keyboardFunction, Function.InterfaceType.Band);
+    }
+    public PadFunction ConvertKeyboardToPad(KeyboardFunction keyboardFunction)
+    {
+        return ConvertFunction<KeyboardFunction, PadFunction>(keyboardFunction, Function.InterfaceType.Pad);
+    }
+    public KeyboardFunction ConvertBandToKeyboard(BandFunction bandFunction)
+    {
+        return ConvertFunction<BandFunction, KeyboardFunction>(bandFunction, Function.InterfaceType.Keyboard);
+    }
+    public PadFunction ConvertBandToPad(BandFunction bandFunction)
+    {
+        return ConvertFunction<BandFunction, PadFunction>(bandFunction, Function.InterfaceType.Pad);
+    }
+    public KeyboardFunction ConvertPadToKeyboard(PadFunction padFunction)
+    {
+        return ConvertFunction<PadFunction, KeyboardFunction>(padFunction, Function.InterfaceType.Keyboard);
+    }
+    public BandFunction ConvertPadToBand(PadFunction padFunction)
+    {
+        return ConvertFunction<PadFunction, BandFunction>(padFunction, Function.InterfaceType.Band);
     }
 }
 }

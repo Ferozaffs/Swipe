@@ -13,8 +13,16 @@ public class BluetoothReader : IDataReader
 
     public bool IsMonitoring;
     private bool _stopped = false;
+    private string _name;
+    private string _uuid;
 
-    public async Task<bool> Initialize()
+    public BluetoothReader(string name, string uuid)
+    {
+        _name = name;
+        _uuid = uuid;
+    }
+
+    public async Task<bool> Start()
     {
         return await Connect();
     }
@@ -23,12 +31,12 @@ public class BluetoothReader : IDataReader
     {
         if (IsMonitoring == false)
         {
-            var device = await BluetoothHelper.FindDevice();
+            var device = await BluetoothHelper.FindDevice(_name);
             if (device != null)
             {
                 IsMonitoring = true;
                 OnConnection?.Invoke(IsMonitoring);
-                MonitorDevice(device);
+                _ = MonitorDevice(device);
                 return true;
             }
         }
@@ -36,9 +44,10 @@ public class BluetoothReader : IDataReader
         return false;
     }
 
-    public void Stop()
+    public bool Stop()
     {
         _stopped = true;
+        return true;
     }
 
     private async Task MonitorDevice(BluetoothLEDevice device)
@@ -78,7 +87,7 @@ public class BluetoothReader : IDataReader
             {
                 foreach (var characteristic in result.Characteristics)
                 {
-                    if (characteristic.Uuid.ToString().Contains("2c19"))
+                    if (characteristic.Uuid.ToString().Contains(_uuid))
                     {
                         if (characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify))
                         {

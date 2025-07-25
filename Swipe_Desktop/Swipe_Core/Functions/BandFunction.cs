@@ -1,9 +1,9 @@
 ﻿using Newtonsoft.Json;
 
-namespace Swipe_Core
+namespace Swipe_Core.Functions
 {
 
-public class SwipeBandFunction : Function
+public class BandFunction : Function
 {
     [JsonProperty]
     public Dictionary<Guid, Dictionary<string, List<float>>> Recordings {
