@@ -90,11 +90,6 @@ pspice/
 *.tar.xz
 *.7z
 
-# 3D models
-*.step
-*.stp
-*.wrl
-
 # Project specific builds or outputs
 /build/
 *.cache
