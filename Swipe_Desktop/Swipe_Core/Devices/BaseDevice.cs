@@ -11,11 +11,11 @@ public abstract class BaseDevice
     protected IDataReader.ReaderType _readerType;
     protected IDataReader? _reader;
 
-    public bool Start()
+    public async Task<bool> Start()
     {
         if (_reader != null)
         {
-            return _reader.Start().Result;
+            return await _reader.Start();
         }
         return false;
     }

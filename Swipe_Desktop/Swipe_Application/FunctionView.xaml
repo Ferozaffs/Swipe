@@ -216,6 +216,26 @@
             HorizontalAlignment="Left"
             VerticalAlignment="Stretch" />
         <StackPanel
+            x:Name="PadPanel"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Visibility="Collapsed">
+            <WrapPanel>
+                <TextBlock
+                    Margin="5"
+                    FontSize="20"
+                    Foreground="Gray"
+                    Text="Key:" />
+                <ComboBox
+                    x:Name="PadKeyCombo"
+                    Width="100"
+                    Margin="5"
+                    Background="#333333"
+                    BorderThickness="0"
+                    SelectionChanged="PadKeyCombo_SelectionChanged" />
+            </WrapPanel>
+        </StackPanel>
+        <StackPanel
             x:Name="SwipeBandPanel"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"

@@ -24,7 +24,11 @@ public class BluetoothReader : IDataReader
 
     public async Task<bool> Start()
     {
-        return await Connect();
+        await Task.CompletedTask;
+
+        _ = Connect();
+
+        return true;
     }
 
     public async Task<bool> Connect()

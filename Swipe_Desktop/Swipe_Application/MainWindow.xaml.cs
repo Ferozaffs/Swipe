@@ -3,12 +3,8 @@ using Swipe_Core;
 using System.Windows;
 using System.ComponentModel;
 using System.Windows.Media;
-using System.Windows.Forms;
-using System.Windows.Input;
 using System.IO;
 using System.Reflection;
-using Windows.Devices.PointOfService;
-using Windows.Devices.HumanInterfaceDevice;
 using Swipe_Core.Devices;
 using Swipe_Core.Functions;
 
@@ -20,7 +16,6 @@ namespace Swipe_Application
 public partial class MainWindow : Window
 {
     public FunctionManager FunctionManager { get; }
-    // private COMReader? _comReader;
     private BandDevice? _bandDevice;
     private PadDevice? _padDevice;
     private NotifyIcon _notifyIcon;
@@ -38,6 +33,7 @@ public partial class MainWindow : Window
         _bandDevice.OnConnection += UpdateBandConnectionStatus;
         _bandDevice.OnStatus += UpdateBandDataStatus;
         _padDevice.OnConnection += UpdatePadConnectionStatus;
+        _padDevice.OnStatus += UpdatePadDataStatus;
 
         _bandDevice.Start();
         _padDevice.Start();
@@ -81,6 +77,7 @@ public partial class MainWindow : Window
         if (_padDevice != null)
         {
             _padDevice.OnConnection -= UpdatePadConnectionStatus;
+            _padDevice.OnStatus -= UpdatePadDataStatus;
             _padDevice.Stop();
         }
 
@@ -150,6 +147,14 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ConnectionPadButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_padDevice != null)
+        {
+            _padDevice.Connect();
+        }
+    }
+
     private void UpdateBandConnectionStatus(bool connectionStatus)
     {
         this.Dispatcher.Invoke(() =>
@@ -200,6 +205,21 @@ public partial class MainWindow : Window
                                    else
                                    {
                                        BandDataStatusText.Foreground = new SolidColorBrush(Colors.LightGreen);
+                                   }
+                               });
+    }
+
+    private void UpdatePadDataStatus(bool status)
+    {
+        this.Dispatcher.Invoke(() =>
+                               {
+                                   if (status)
+                                   {
+                                       PadStatus.Foreground = new SolidColorBrush(Colors.LightGreen);
+                                   }
+                                   else
+                                   {
+                                       PadStatus.Foreground = new SolidColorBrush(Colors.Gray);
                                    }
                                });
     }

@@ -57,6 +57,7 @@
                         Foreground="#444444"
                         Text="|" />
                     <TextBlock
+                        x:Name="PadStatus"
                         Margin="5,7,0,5"
                         FontSize="24"
                         Foreground="Gray"
@@ -66,7 +67,7 @@
                         Width="36"
                         Height="36"
                         Margin="5,0,0,5"
-                        Click="ConnectionBandButton_Click"
+                        Click="ConnectionPadButton_Click"
                         Content="⟳"
                         FontSize="24"
                         Foreground="IndianRed"

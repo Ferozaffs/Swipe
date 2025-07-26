@@ -1,43 +1,64 @@
-﻿using Windows.Devices.Bluetooth;
+﻿using System.Diagnostics;
+using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.Advertisement;
 using Windows.Foundation;
+using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace Swipe_Core
 {
 public static class BluetoothHelper
 {
-    public static async Task<BluetoothLEDevice?> FindDevice(string name)
+    private static readonly BluetoothLEAdvertisementWatcher _watcher;
+    private static TaskCompletionSource<BluetoothLEDevice?>? _taskCompletionSource;
+    private static readonly object _lock = new();
+    private static string? _name;
+
+    static BluetoothHelper()
     {
-        var taskCompletionSource = new TaskCompletionSource<BluetoothLEDevice>();
+        _watcher = new BluetoothLEAdvertisementWatcher { ScanningMode = BluetoothLEScanningMode.Active };
+        _watcher.Received += OnAdvertisementReceived;
+    }
 
-        var watcher = new BluetoothLEAdvertisementWatcher { ScanningMode = BluetoothLEScanningMode.Active };
-
-        TypedEventHandler<BluetoothLEAdvertisementWatcher, BluetoothLEAdvertisementReceivedEventArgs>? handler = null;
-
-        handler = async (sender, args) =>
+    public static async Task<BluetoothLEDevice?> FindDevice(string name, int timeoutMs = 1000)
+    {
+        while (true)
         {
-            var device = await BluetoothLEDevice.FromBluetoothAddressAsync(args.BluetoothAddress);
-
-            if (device != null && device.Name == name)
+            lock (_lock)
             {
-                sender.Received -= handler;
-                sender.Stop();
-                taskCompletionSource.TrySetResult(device);
+                if (_taskCompletionSource == null || _taskCompletionSource.Task.IsCompleted)
+                {
+                    _name = name;
+                    _taskCompletionSource = new TaskCompletionSource < BluetoothLEDevice ? > ();
+                    break;
+                }
             }
-        };
 
-        watcher.Received += handler;
-        watcher.Start();
-
-        var completedTask = await Task.WhenAny(taskCompletionSource.Task, Task.Delay(1000));
-
-        if (taskCompletionSource.Task.IsCompleted == false)
-        {
-            watcher.Received -= handler;
-            watcher.Stop();
+            await Task.Delay(timeoutMs);
         }
 
-        return completedTask == taskCompletionSource.Task ? taskCompletionSource.Task.Result : null;
+        _watcher.Start();
+
+        var completedTask = await Task.WhenAny(_taskCompletionSource.Task, Task.Delay(timeoutMs));
+
+        _watcher.Stop();
+
+        var result = completedTask == _taskCompletionSource.Task ? _taskCompletionSource.Task.Result : null;
+
+        _taskCompletionSource.TrySetResult(null);
+
+        return result;
+    }
+
+    private static async void OnAdvertisementReceived(BluetoothLEAdvertisementWatcher sender,
+                                                      BluetoothLEAdvertisementReceivedEventArgs args)
+    {
+        var device = await BluetoothLEDevice.FromBluetoothAddressAsync(args.BluetoothAddress);
+
+        if (device != null && device.Name == _name)
+        {
+            _taskCompletionSource?.TrySetResult(device);
+            return;
+        }
     }
 }
 }

@@ -4,10 +4,10 @@ BLEService bleService("f9c97383-3025-4a1f-9903-8b313565184e");
 BLEStringCharacteristic bleCharacteristic("67391cf3-acc4-4a8c-af95-0131221895f2", BLERead | BLENotify, 96);
 
 int inputPins[] = {
-  2, 4,
-  5, 16, 17, 26,
-  27, 12, 18, 19,
-  21, 22, 23, 25
+  3, 1, 22, 23,
+  5, 18, 19, 21,
+  2, 4, 16, 17,
+  12, 27, 26, 25
 };
 
 bool hasInput = false;
@@ -43,8 +43,6 @@ String getPinState() {
 void setup() {  
   Serial.begin(115200);
 
-          Serial1.begin(9600, SERIAL_8N1, 9, 10); // Common UART1 pins
-
   setupPins();
 
   if (!BLE.begin()) {
@@ -79,7 +77,5 @@ void loop() {
     else {
       Serial.println(getPinState());
       delay(10);
-
-  Serial1.println("Hello from ESP32 UART1");
     }
 }

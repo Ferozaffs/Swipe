@@ -10,13 +10,12 @@ namespace Swipe_Core.Functions
 {
 public class PadFunction : Function
 {
-    private bool _fired = false;
     [JsonProperty]
     public PadDevice.PadKey Key { get; private set; } = PadDevice.PadKey.None;
 
     public bool EvaluateAndRun(PadDevice.PadKey key)
     {
-        if (_fired == false && key == Key)
+        if (key == Key)
         {
             if (RunFunction() == "Success")
             {
@@ -25,10 +24,6 @@ public class PadFunction : Function
         }
 
         return false;
-    }
-    public void Reset()
-    {
-        _fired = false;
     }
 
     public void SetKey(PadDevice.PadKey key)

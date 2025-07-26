@@ -1,4 +1,5 @@
 ﻿using Swipe_Core;
+using Swipe_Core.Devices;
 using Swipe_Core.Functions;
 using System.Windows;
 using System.Windows.Controls;
@@ -25,6 +26,10 @@ public partial class FunctionView : System.Windows.Controls.UserControl
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
+        FuncTypeCombo.ItemsSource = Enum.GetValues(typeof(FunctionType));
+        FuncInterfaceCombo.ItemsSource = Enum.GetValues(typeof(InterfaceType));
+        PadKeyCombo.ItemsSource = Enum.GetValues(typeof(PadDevice.PadKey));
+
         var mainWindow = Utils.FindParent<MainWindow>(this);
         if (mainWindow != null)
         {
@@ -40,9 +45,6 @@ public partial class FunctionView : System.Windows.Controls.UserControl
 
             KeyboardManager.OnAllKeyReleased += KeyboardManager_OnKeyReleased;
         }
-
-        FuncTypeCombo.ItemsSource = Enum.GetValues(typeof(FunctionType));
-        FuncInterfaceCombo.ItemsSource = Enum.GetValues(typeof(InterfaceType));
     }
 
     public void Unload()
@@ -55,9 +57,14 @@ public partial class FunctionView : System.Windows.Controls.UserControl
         KeyboardManager.OnAllKeyReleased -= KeyboardManager_OnKeyReleased;
     }
 
-    public void UpdateEditingStatus()
+    public void UpdateEditingStatus(Function? func = null)
     {
-        if (_currentFunction == null)
+        if (func == null)
+        {
+            func = _currentFunction;
+        }
+
+        if (func == null)
         {
             FuncEnabledCheck.IsChecked = true;
             FuncNameTextBox.Text = "";
@@ -73,11 +80,11 @@ public partial class FunctionView : System.Windows.Controls.UserControl
         }
         else
         {
-            FuncEnabledCheck.IsChecked = _currentFunction.IsEnabled;
-            FuncNameTextBox.Text = _currentFunction.Name;
-            FuncTypeCombo.SelectedItem = _currentFunction.FuncType;
-            FuncInterfaceCombo.SelectedItem = _currentFunction.Interface;
-            FuncCommandTextBox.Text = _currentFunction.Command;
+            FuncEnabledCheck.IsChecked = func.IsEnabled;
+            FuncNameTextBox.Text = func.Name;
+            FuncTypeCombo.SelectedItem = func.FuncType;
+            FuncInterfaceCombo.SelectedItem = func.Interface;
+            FuncCommandTextBox.Text = func.Command;
 
             FuncEnabledCheck.IsEnabled = true;
             FuncNameTextBox.IsEnabled = true;
@@ -86,21 +93,34 @@ public partial class FunctionView : System.Windows.Controls.UserControl
             FuncCommandTextBox.IsEnabled = true;
         }
 
-        if (_currentFunction is BandFunction)
+        if (func is BandFunction)
         {
             SwipeBandPanel.Visibility = Visibility.Visible;
             RecordsPanel.Visibility = Visibility.Visible;
             KeyboardPanel.Visibility = Visibility.Collapsed;
             KeyboardBindsPanel.Visibility = Visibility.Collapsed;
+            PadPanel.Visibility = Visibility.Collapsed;
+
             UpdateRecordedCurves();
         }
-        else if (_currentFunction is KeyboardFunction)
+        else if (func is KeyboardFunction)
         {
             SwipeBandPanel.Visibility = Visibility.Collapsed;
             RecordsPanel.Visibility = Visibility.Collapsed;
             KeyboardPanel.Visibility = Visibility.Visible;
             KeyboardBindsPanel.Visibility = Visibility.Visible;
+            PadPanel.Visibility = Visibility.Collapsed;
             UpdateKeySets();
+        }
+        else if (func is PadFunction)
+        {
+            SwipeBandPanel.Visibility = Visibility.Collapsed;
+            RecordsPanel.Visibility = Visibility.Collapsed;
+            KeyboardPanel.Visibility = Visibility.Collapsed;
+            KeyboardBindsPanel.Visibility = Visibility.Collapsed;
+            PadPanel.Visibility = Visibility.Visible;
+
+            PadKeyCombo.SelectedValue = (func as PadFunction).Key;
         }
     }
 
@@ -165,8 +185,8 @@ public partial class FunctionView : System.Windows.Controls.UserControl
 
                 if (_currentFunction == null)
                 {
+                    UpdateEditingStatus(functions.Values.Last());
                     _currentFunction = functions.Values.Last();
-                    UpdateEditingStatus();
                 }
 
                 bool foundMatchingFunction = false;
@@ -273,12 +293,35 @@ public partial class FunctionView : System.Windows.Controls.UserControl
                     _currentFunction = _functionManager.ConvertBandToKeyboard(swipeBandFunction);
                     UpdateEditingStatus();
                 }
+                else if (interfaceType == InterfaceType.Pad)
+                {
+                    _currentFunction = _functionManager.ConvertBandToPad(swipeBandFunction);
+                    UpdateEditingStatus();
+                }
             }
             else if (_currentFunction is KeyboardFunction keyboardFunction)
             {
                 if (interfaceType == InterfaceType.Band)
                 {
                     _currentFunction = _functionManager.ConvertKeyboardToBand(keyboardFunction);
+                    UpdateEditingStatus();
+                }
+                else if (interfaceType == InterfaceType.Pad)
+                {
+                    _currentFunction = _functionManager.ConvertKeyboardToPad(keyboardFunction);
+                    UpdateEditingStatus();
+                }
+            }
+            else if (_currentFunction is PadFunction padFunction)
+            {
+                if (interfaceType == InterfaceType.Band)
+                {
+                    _currentFunction = _functionManager.ConvertPadToBand(padFunction);
+                    UpdateEditingStatus();
+                }
+                else if (interfaceType == InterfaceType.Pad)
+                {
+                    _currentFunction = _functionManager.ConvertPadToKeyboard(padFunction);
                     UpdateEditingStatus();
                 }
             }
@@ -522,6 +565,15 @@ public partial class FunctionView : System.Windows.Controls.UserControl
 
                 RecordsPanel.Children.Add(wrapPanel);
             }
+        }
+    }
+
+    private void PadKeyCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        var padFunction = _currentFunction as PadFunction;
+        if (padFunction != null)
+        {
+            padFunction.SetKey((PadDevice.PadKey)((System.Windows.Controls.ComboBox)sender).SelectedItem);
         }
     }
 }
