@@ -8,6 +8,8 @@
     Title="MainWindow"
     Width="1024"
     Height="768"
+    Background="#222222"
+    Icon="pack://application:,,,/SwipeIcon.ico"
     mc:Ignorable="d">
 
     <Grid Background="#444444">

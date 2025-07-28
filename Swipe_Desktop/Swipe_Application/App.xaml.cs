@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Input;
 using System.Windows;
-using Swipe_Core;
 
 namespace Swipe_Application
 {
@@ -24,6 +23,8 @@ public partial class App : System.Windows.Application
     private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
     private static LowLevelKeyboardProc _proc = HookCallback;
     private static IntPtr _hookID = IntPtr.Zero;
+
+    private static Swipe_Core.Devices.KeyboardDevice? _keyboardDevice;
 
 #region WinAPI Imports
     [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -100,12 +101,12 @@ public partial class App : System.Windows.Application
         if (nCode >= 0 && (wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN))
         {
             int vkCode = Marshal.ReadInt32(lParam);
-            KeyboardManager.AddKey((int)KeyInterop.KeyFromVirtualKey(vkCode));
+            _keyboardDevice?.AddKey((int)KeyInterop.KeyFromVirtualKey(vkCode));
         }
         else if (nCode >= 0 && (wParam == (IntPtr)WM_KEYUP || wParam == (IntPtr)WM_SYSKEYUP))
         {
             int vkCode = Marshal.ReadInt32(lParam);
-            KeyboardManager.RemoveKey((int)KeyInterop.KeyFromVirtualKey(vkCode));
+            _keyboardDevice?.RemoveKey((int)KeyInterop.KeyFromVirtualKey(vkCode));
         }
 
         return CallNextHookEx(_hookID, nCode, wParam, lParam);
@@ -126,6 +127,11 @@ public partial class App : System.Windows.Application
         }
 
         return text;
+    }
+
+    public static void SetKeyboardDevice(Swipe_Core.Devices.KeyboardDevice keyboard)
+    {
+        _keyboardDevice = keyboard;
     }
 }
 }

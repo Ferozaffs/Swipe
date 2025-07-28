@@ -62,8 +62,11 @@ public partial class SettingsView : System.Windows.Controls.UserControl
 
     private void OnLogEntry(object? sender, string e)
     {
-        _logStrings.Add(e);
-        UpdateLog();
+        this.Dispatcher.Invoke(() =>
+                               {
+                                   _logStrings.Add(e);
+                                   UpdateLog();
+                               });
     }
 
     private void DTWSlider_ValueChanged(object sender, System.Windows.RoutedPropertyChangedEventArgs<double> e)

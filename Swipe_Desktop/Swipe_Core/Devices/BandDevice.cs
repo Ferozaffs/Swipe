@@ -9,7 +9,7 @@ public class BandDevice : BaseDevice
 
     public BandDevice(IDataReader.ReaderType type)
     {
-        _name = "Swipe v.1.0";
+        Name = "Swipe v.1.0";
         _uuid = "b6fe5a0e-ff8d-494a-8885-143cda0100ea";
         _readerType = type;
         SetupReader();

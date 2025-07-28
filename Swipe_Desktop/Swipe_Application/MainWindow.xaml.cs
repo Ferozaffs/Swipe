@@ -15,10 +15,12 @@ namespace Swipe_Application
 /// </summary>
 public partial class MainWindow : Window
 {
-    public FunctionManager FunctionManager { get; }
-    public Logger Logger { get; }
-    private BandDevice? _bandDevice;
-    private PadDevice? _padDevice;
+    public FunctionManager FunctionManager { get; private set; }
+    public Logger Logger { get; private set; }
+    public KeyboardDevice? KeyboardDevice { get; private set; }
+    public BandDevice? BandDevice { get; private set; }
+    public PadDevice? PadDevice { get; private set; }
+
     private NotifyIcon _notifyIcon;
 
     public MainWindow()
@@ -30,39 +32,36 @@ public partial class MainWindow : Window
 
         Directory.CreateDirectory(@"Functions");
 
-        _bandDevice = new BandDevice(IDataReader.ReaderType.Bluetooth);
-        _padDevice = new PadDevice(IDataReader.ReaderType.Bluetooth);
+        KeyboardDevice = new KeyboardDevice();
+        App.SetKeyboardDevice(KeyboardDevice);
+        BandDevice = new BandDevice(IDataReader.ReaderType.Bluetooth);
+        PadDevice = new PadDevice(IDataReader.ReaderType.Bluetooth);
 
-        _bandDevice.OnConnection += UpdateBandConnectionStatus;
-        _bandDevice.OnStatus += UpdateBandDataStatus;
-        _padDevice.OnConnection += UpdatePadConnectionStatus;
-        _padDevice.OnStatus += UpdatePadDataStatus;
+        BandDevice.OnConnection += UpdateBandConnectionStatus;
+        BandDevice.OnStatus += UpdateBandDataStatus;
+        PadDevice.OnConnection += UpdatePadConnectionStatus;
+        PadDevice.OnStatus += UpdatePadDataStatus;
 
-        _ = _bandDevice.Start();
-        _ = _padDevice.Start();
+        _ = BandDevice.Start();
+        _ = PadDevice.Start();
 
-        FunctionManager = new FunctionManager(_bandDevice, _padDevice);
+        FunctionManager = new FunctionManager(KeyboardDevice, BandDevice, PadDevice);
         FunctionManager.AddLogger(Logger);
+        FunctionManager.OnActivation += FunctionActivatied;
 
         _notifyIcon = new NotifyIcon();
-        string resourceName = "Swipe_Application.Icon1.ico";
-
-        Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
-        if (stream != null)
-        {
-            _notifyIcon.Icon = new Icon(stream);
-        }
         _notifyIcon.Visible = true;
         _notifyIcon.Text = "Swipe";
+        UpdateIcon(System.Drawing.Color.LightYellow);
 
         _notifyIcon.DoubleClick += ShowWindow;
     }
 
     public CurveCollector? GetCurveCollector()
     {
-        if (_bandDevice != null && _bandDevice.CurveCollector != null)
+        if (BandDevice != null && BandDevice.CurveCollector != null)
         {
-            return _bandDevice.CurveCollector;
+            return BandDevice.CurveCollector;
         }
 
         return null;
@@ -70,25 +69,44 @@ public partial class MainWindow : Window
 
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
+        FunctionManager.OnActivation -= FunctionActivatied;
+
         _notifyIcon.Dispose();
 
-        if (_bandDevice != null)
+        if (BandDevice != null)
         {
-            _bandDevice.OnConnection -= UpdateBandConnectionStatus;
-            _bandDevice.OnStatus -= UpdateBandDataStatus;
-            _bandDevice.Stop();
+            BandDevice.OnConnection -= UpdateBandConnectionStatus;
+            BandDevice.OnStatus -= UpdateBandDataStatus;
+            BandDevice.Stop();
         }
-        if (_padDevice != null)
+        if (PadDevice != null)
         {
-            _padDevice.OnConnection -= UpdatePadConnectionStatus;
-            _padDevice.OnStatus -= UpdatePadDataStatus;
-            _padDevice.Stop();
+            PadDevice.OnConnection -= UpdatePadConnectionStatus;
+            PadDevice.OnStatus -= UpdatePadDataStatus;
+            PadDevice.Stop();
         }
 
+        FunctionManager.Unload();
         HomeViewControl.Unload();
         FunctionViewControl.Unload();
         CurveDebuggerViewControl.Unload();
         SettingsViewControl.Unload();
+    }
+
+    void UpdateIcon(System.Drawing.Color color)
+    {
+        int size = 16;
+        using (Bitmap bmp = new Bitmap(size, size))
+        {
+            using (Graphics gfx = Graphics.FromImage(bmp))
+            {
+                gfx.Clear(color);
+            }
+
+            IntPtr hIcon = bmp.GetHicon();
+            Icon icon = System.Drawing.Icon.FromHandle(hIcon);
+            _notifyIcon.Icon = icon;
+        }
     }
 
     protected override void OnStateChanged(EventArgs e)
@@ -151,25 +169,25 @@ public partial class MainWindow : Window
 
     private void RecalibrateBandButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_bandDevice != null && _bandDevice.CurveCollector != null)
+        if (BandDevice != null && BandDevice.CurveCollector != null)
         {
-            _bandDevice.CurveCollector.Recalibrate();
+            BandDevice.CurveCollector.Recalibrate();
         }
     }
 
     private void ConnectionBandButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_bandDevice != null)
+        if (BandDevice != null)
         {
-            _bandDevice.Connect();
+            BandDevice.Connect();
         }
     }
 
     private void ConnectionPadButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_padDevice != null)
+        if (PadDevice != null)
         {
-            _padDevice.Connect();
+            PadDevice.Connect();
         }
     }
 
@@ -240,6 +258,14 @@ public partial class MainWindow : Window
                                        PadStatus.Foreground = new SolidColorBrush(Colors.Gray);
                                    }
                                });
+    }
+
+    private async void FunctionActivatied(bool obj)
+    {
+        UpdateIcon(System.Drawing.Color.LightGreen);
+        await Task.Delay(3000);
+
+        UpdateIcon(System.Drawing.Color.LightYellow);
     }
 }
 }

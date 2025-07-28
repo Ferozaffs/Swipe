@@ -145,7 +145,7 @@ public class Function
         }
         return "Disabled";
     }
-    protected bool Save()
+    public bool Save()
     {
         if (Name.Length == 0 || Name == "New Function")
         {

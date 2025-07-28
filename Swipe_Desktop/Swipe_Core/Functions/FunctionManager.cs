@@ -8,17 +8,26 @@ namespace Swipe_Core.Functions
 public class FunctionManager
 {
     public event Action<Dictionary<Guid, Function>>? OnFunctionChange;
+    public event Action<bool>? OnActivation;
     public bool IsExecutionEnabled = true;
 
-    private Dictionary<Guid, Function> _functions = new Dictionary<Guid, Function>();
+    public Dictionary<Guid, Function> Functions { get; private set; } = new Dictionary<Guid, Function>();
+    public List<Function> ActivatedFunctions { get; private set; } = new List<Function>();
+    private KeyboardDevice? _keyboardDevice = null;
     private BandDevice? _bandDevice = null;
     private PadDevice? _padDevice = null;
     private Logger? _logger = null;
     private float DTWThreshold = 2.25f;
 
-    public FunctionManager(BandDevice? bandDevice, PadDevice? padDevice)
+    public FunctionManager(KeyboardDevice? keyboardDevice, BandDevice? bandDevice, PadDevice? padDevice)
     {
         LoadFunctions();
+        if (keyboardDevice != null)
+        {
+            _keyboardDevice = keyboardDevice;
+            _keyboardDevice.OnKeyPressed += EvaluateHeldKeys;
+            _keyboardDevice.OnKeyReleased += ResetKeyboardFunctions;
+        }
         if (bandDevice != null && bandDevice.CurveCollector != null)
         {
             _bandDevice = bandDevice;
@@ -29,12 +38,21 @@ public class FunctionManager
             _padDevice = padDevice;
             _padDevice.OnKeyPressed += EvaluatePadClick;
         }
-        KeyboardManager.OnKeyPressed += EvaluateHeldKeys;
-        KeyboardManager.OnKeyReleased += ResetKeyboardFunctions;
     }
 
     public void Unload()
     {
+        foreach (var func in Functions)
+        {
+            func.Value.Save();
+        }
+
+        if (_keyboardDevice != null)
+        {
+            _keyboardDevice.OnKeyPressed -= EvaluateHeldKeys;
+            _keyboardDevice.OnKeyReleased -= ResetKeyboardFunctions;
+        }
+
         if (_bandDevice != null && _bandDevice.CurveCollector != null)
         {
             _bandDevice.CurveCollector.OnDetect -= EvalutateDetectedCurves;
@@ -44,9 +62,6 @@ public class FunctionManager
         {
             _padDevice.OnKeyPressed -= EvaluatePadClick;
         }
-
-        KeyboardManager.OnKeyPressed -= EvaluateHeldKeys;
-        KeyboardManager.OnKeyReleased -= ResetKeyboardFunctions;
     }
 
     public void LoadFunctions()
@@ -59,36 +74,36 @@ public class FunctionManager
                 var func = Function.Load(file);
                 if (func != null)
                 {
-                    _functions.Add(func.Guid, func);
+                    Functions.Add(func.Guid, func);
                     func.OnFunctionChange += FunctionManager_OnFunctionChange;
                 }
             }
 
-            OnFunctionChange?.Invoke(_functions);
+            OnFunctionChange?.Invoke(Functions);
         }
     }
 
     private void FunctionManager_OnFunctionChange(Function obj)
     {
-        OnFunctionChange?.Invoke(_functions);
+        OnFunctionChange?.Invoke(Functions);
     }
 
     public Dictionary<Guid, Function> GetFunctions()
     {
-        return _functions;
+        return Functions;
     }
 
     public Function GetFunction(Guid guid)
     {
-        return _functions[guid];
+        return Functions[guid];
     }
 
     public Function CreateFunction()
     {
         var func = new KeyboardFunction();
-        _functions.Add(func.Guid, func);
+        Functions.Add(func.Guid, func);
         func.OnFunctionChange += FunctionManager_OnFunctionChange;
-        OnFunctionChange?.Invoke(_functions);
+        OnFunctionChange?.Invoke(Functions);
 
         _logger?.Log("[USER] Function added");
 
@@ -99,20 +114,20 @@ public class FunctionManager
     {
         _logger?.Log($"[USER] Function removed");
 
-        _functions[guid].Remove();
-        _functions[guid].OnFunctionChange -= FunctionManager_OnFunctionChange;
-        _functions.Remove(guid);
-        OnFunctionChange?.Invoke(_functions);
+        Functions[guid].Remove();
+        Functions[guid].OnFunctionChange -= FunctionManager_OnFunctionChange;
+        Functions.Remove(guid);
+        OnFunctionChange?.Invoke(Functions);
     }
 
     public void ReplaceFunction(Function func)
     {
-        _functions[func.Guid].Remove();
-        _functions[func.Guid].OnFunctionChange -= FunctionManager_OnFunctionChange;
-        _functions.Remove(func.Guid);
-        _functions.Add(func.Guid, func);
+        Functions[func.Guid].Remove();
+        Functions[func.Guid].OnFunctionChange -= FunctionManager_OnFunctionChange;
+        Functions.Remove(func.Guid);
+        Functions.Add(func.Guid, func);
         func.OnFunctionChange += FunctionManager_OnFunctionChange;
-        OnFunctionChange?.Invoke(_functions);
+        OnFunctionChange?.Invoke(Functions);
     }
 
     public void SetDTWTreshold(float dtw)
@@ -126,18 +141,20 @@ public class FunctionManager
 
     private void EvaluateHeldKeys(SortedSet<int> keys)
     {
-        if (!IsExecutionEnabled || _functions.Count == 0)
+        if (!IsExecutionEnabled || Functions.Count == 0)
         {
             return;
         }
 
-        foreach (var function in _functions)
+        foreach (var function in Functions)
         {
             var keyboardFunction = function.Value as KeyboardFunction;
             if (keyboardFunction != null && keyboardFunction.IsEnabled)
             {
                 if (keyboardFunction.EvaluateAndRun(keys))
                 {
+                    ActivatedFunctions.Add(keyboardFunction);
+                    OnActivation?.Invoke(true);
                     _logger?.Log($"[SYSTEM] Keyboard function {keyboardFunction.Name} activated");
                 }
             }
@@ -146,7 +163,7 @@ public class FunctionManager
 
     private void ResetKeyboardFunctions(SortedSet<int> _)
     {
-        foreach (var function in _functions)
+        foreach (var function in Functions)
         {
             var keyboardFunction = function.Value as KeyboardFunction;
             if (keyboardFunction != null && keyboardFunction.IsEnabled)
@@ -158,14 +175,14 @@ public class FunctionManager
 
     private void EvalutateDetectedCurves(Dictionary<string, List<float>> detectedCurves)
     {
-        if (!IsExecutionEnabled || _functions.Count == 0)
+        if (!IsExecutionEnabled || Functions.Count == 0)
         {
             return;
         }
 
         List<(BandFunction, float, List<(Guid, float)>)> functionDtws =
             new List<(BandFunction, float, List<(Guid, float)>)>();
-        foreach (var function in _functions)
+        foreach (var function in Functions)
         {
             var swipeBandFunction = function.Value as BandFunction;
             if (swipeBandFunction == null || swipeBandFunction.IsEnabled == false ||
@@ -216,6 +233,8 @@ public class FunctionManager
         {
             if (sortedDict[0].Item1.RunFunction() == "Success")
             {
+                ActivatedFunctions.Add(sortedDict[0].Item1);
+                OnActivation?.Invoke(true);
                 _logger?.Log($"[SYSTEM] Band function {sortedDict[0].Item1.Name} activated");
             }
 
@@ -227,18 +246,20 @@ public class FunctionManager
     }
     private void EvaluatePadClick(PadDevice.PadKey key)
     {
-        if (!IsExecutionEnabled || _functions.Count == 0)
+        if (!IsExecutionEnabled || Functions.Count == 0)
         {
             return;
         }
 
-        foreach (var function in _functions)
+        foreach (var function in Functions)
         {
             var padFunction = function.Value as PadFunction;
             if (padFunction != null && padFunction.IsEnabled)
             {
                 if (padFunction.EvaluateAndRun(key))
                 {
+                    ActivatedFunctions.Add(padFunction);
+                    OnActivation?.Invoke(true);
                     _logger?.Log($"[SYSTEM] Pad function { padFunction.Name } activated");
                 }
             }

@@ -12,12 +12,13 @@
 
   <ItemGroup>
     <None Remove="Icon1.ico" />
+    <None Remove="SwipeIcon.ico" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Icon1.ico">
+    <Resource Include="SwipeIcon.ico">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>

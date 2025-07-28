@@ -43,7 +43,10 @@ public partial class FunctionView : System.Windows.Controls.UserControl
             _functionManager.OnFunctionChange += UpdateFunctionList;
             UpdateFunctionList(_functionManager.GetFunctions());
 
-            KeyboardManager.OnAllKeyReleased += KeyboardManager_OnKeyReleased;
+            if (mainWindow.KeyboardDevice != null)
+            {
+                mainWindow.KeyboardDevice.OnAllKeyReleased += KeyboardManager_OnKeyReleased;
+            }
         }
     }
 
@@ -54,7 +57,14 @@ public partial class FunctionView : System.Windows.Controls.UserControl
             _curveCollector.OnDetect -= HandleDetectCurves;
         }
 
-        KeyboardManager.OnAllKeyReleased -= KeyboardManager_OnKeyReleased;
+        var mainWindow = Utils.FindParent<MainWindow>(this);
+        if (mainWindow != null)
+        {
+            if (mainWindow.KeyboardDevice != null)
+            {
+                mainWindow.KeyboardDevice.OnAllKeyReleased -= KeyboardManager_OnKeyReleased;
+            }
+        }
     }
 
     public void UpdateEditingStatus(Function? func = null)

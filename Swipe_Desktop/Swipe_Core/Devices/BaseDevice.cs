@@ -5,8 +5,8 @@ namespace Swipe_Core.Devices
 public abstract class BaseDevice
 {
     public event Action<bool>? OnConnection;
-
-    protected string? _name;
+    public string? Name { get; protected set; } = "-";
+    public bool Connected { get; protected set; } = false;
     protected string? _uuid;
     protected IDataReader.ReaderType _readerType;
     protected IDataReader? _reader;
@@ -34,11 +34,11 @@ public abstract class BaseDevice
         switch (_readerType)
         {
         case IDataReader.ReaderType.Bluetooth:
-            if (_name == null || _uuid == null)
+            if (Name == null || _uuid == null)
             {
                 throw new InvalidOperationException("Name and UUID not setup");
             }
-            _reader = new BluetoothReader(_name, _uuid);
+            _reader = new BluetoothReader(Name, _uuid);
             break;
         case IDataReader.ReaderType.Serial:
             _reader = new COMReader("COM7", 115200);
@@ -56,6 +56,7 @@ public abstract class BaseDevice
 
     private void OnConnection_Internal(bool obj)
     {
+        Connected = obj;
         OnConnection?.Invoke(obj);
     }
 }

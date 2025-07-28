@@ -33,7 +33,7 @@ public class PadDevice : BaseDevice
 
     public PadDevice(IDataReader.ReaderType type)
     {
-        _name = "Swipe Pad v.1.0";
+        Name = "Swipe Pad v.1.0";
         _uuid = "67391cf3-acc4-4a8c-af95-0131221895f2";
         _readerType = type;
         SetupReader();
