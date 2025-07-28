@@ -15,36 +15,52 @@
             <ColumnDefinition Width="64" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <StackPanel Grid.Column="0" Background="#222222">
-            <Button
-                x:Name="HomeBtn"
-                Width="36"
-                Height="36"
-                Margin="0,10,0,10"
-                Click="Home_Click"
-                Content="⌂"
-                FontSize="28"
-                Style="{StaticResource FlatDarkButton}" />
-            <Button
-                x:Name="FunctionsBtn"
-                Width="36"
-                Height="36"
-                Margin="0,10,0,10"
-                Click="Functions_Click"
-                Content="ƒ𝑥"
-                FontSize="24"
-                Style="{StaticResource FlatDarkButton}" />
-            <Button
-                x:Name="DataBtn"
-                Width="36"
-                Height="36"
-                Margin="0,10,0,10"
-                Click="Data_Click"
-                Content="📈"
-                FontSize="20"
-                Style="{StaticResource FlatDarkButton}" />
-
-        </StackPanel>
+        <Grid Grid.Column="0" Background="#222222">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <StackPanel Grid.Row="0">
+                <Button
+                    x:Name="HomeBtn"
+                    Width="36"
+                    Height="36"
+                    Margin="0,10,0,10"
+                    Click="Home_Click"
+                    Content="⌂"
+                    FontSize="28"
+                    Style="{StaticResource FlatDarkButton}" />
+                <Button
+                    x:Name="FunctionsBtn"
+                    Width="36"
+                    Height="36"
+                    Margin="0,10,0,10"
+                    Click="Functions_Click"
+                    Content="ƒ𝑥"
+                    FontSize="24"
+                    Style="{StaticResource FlatDarkButton}" />
+            </StackPanel>
+            <StackPanel Grid.Row="1" VerticalAlignment="Bottom">
+                <Button
+                    x:Name="CurveDebuggingBtn"
+                    Width="36"
+                    Height="36"
+                    Margin="0,10,0,10"
+                    Click="CurveDebugging_Click"
+                    Content="📈"
+                    FontSize="20"
+                    Style="{StaticResource FlatDarkButton}" />
+                <Button
+                    x:Name="SettingsBtn"
+                    Width="36"
+                    Height="36"
+                    Margin="0,10,0,10"
+                    Click="Settings_Click"
+                    Content="⚙️"
+                    FontSize="20"
+                    Style="{StaticResource FlatDarkButton}" />
+            </StackPanel>
+        </Grid>
         <StackPanel Grid.Column="1">
             <Grid Background="#333333">
                 <WrapPanel
@@ -108,7 +124,8 @@
             </Grid>
             <local:HomeView x:Name="HomeViewControl" />
             <local:FunctionView x:Name="FunctionViewControl" Visibility="Collapsed" />
-            <local:DataView x:Name="DataViewControl" Visibility="Collapsed" />
+            <local:CurveDebuggerView x:Name="CurveDebuggerViewControl" Visibility="Collapsed" />
+            <local:SettingsView x:Name="SettingsViewControl" Visibility="Collapsed" />
         </StackPanel>
     </Grid>
 </Window>

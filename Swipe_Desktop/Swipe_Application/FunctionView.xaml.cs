@@ -120,7 +120,7 @@ public partial class FunctionView : System.Windows.Controls.UserControl
             KeyboardBindsPanel.Visibility = Visibility.Collapsed;
             PadPanel.Visibility = Visibility.Visible;
 
-            PadKeyCombo.SelectedValue = (func as PadFunction).Key;
+            PadKeyCombo.SelectedValue = (func as PadFunction)?.Key;
         }
     }
 

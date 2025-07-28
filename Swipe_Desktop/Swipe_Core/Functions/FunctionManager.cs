@@ -13,6 +13,7 @@ public class FunctionManager
     private Dictionary<Guid, Function> _functions = new Dictionary<Guid, Function>();
     private BandDevice? _bandDevice = null;
     private PadDevice? _padDevice = null;
+    private Logger? _logger = null;
     private float DTWThreshold = 2.25f;
 
     public FunctionManager(BandDevice? bandDevice, PadDevice? padDevice)
@@ -89,11 +90,15 @@ public class FunctionManager
         func.OnFunctionChange += FunctionManager_OnFunctionChange;
         OnFunctionChange?.Invoke(_functions);
 
+        _logger?.Log("[USER] Function added");
+
         return func;
     }
 
     public void RemoveFunction(Guid guid)
     {
+        _logger?.Log($"[USER] Function removed");
+
         _functions[guid].Remove();
         _functions[guid].OnFunctionChange -= FunctionManager_OnFunctionChange;
         _functions.Remove(guid);
@@ -109,6 +114,16 @@ public class FunctionManager
         func.OnFunctionChange += FunctionManager_OnFunctionChange;
         OnFunctionChange?.Invoke(_functions);
     }
+
+    public void SetDTWTreshold(float dtw)
+    {
+        DTWThreshold = dtw;
+    }
+    public void AddLogger(Logger logger)
+    {
+        _logger = logger;
+    }
+
     private void EvaluateHeldKeys(SortedSet<int> keys)
     {
         if (!IsExecutionEnabled || _functions.Count == 0)
@@ -121,7 +136,10 @@ public class FunctionManager
             var keyboardFunction = function.Value as KeyboardFunction;
             if (keyboardFunction != null && keyboardFunction.IsEnabled)
             {
-                keyboardFunction.EvaluateAndRun(keys);
+                if (keyboardFunction.EvaluateAndRun(keys))
+                {
+                    _logger?.Log($"[SYSTEM] Keyboard function {keyboardFunction.Name} activated");
+                }
             }
         }
     }
@@ -198,7 +216,7 @@ public class FunctionManager
         {
             if (sortedDict[0].Item1.RunFunction() == "Success")
             {
-                sortedDict[0].Item1.NumActivations++;
+                _logger?.Log($"[SYSTEM] Band function {sortedDict[0].Item1.Name} activated");
             }
 
             foreach (var recording in sortedDict[0].Item3)
@@ -219,7 +237,10 @@ public class FunctionManager
             var padFunction = function.Value as PadFunction;
             if (padFunction != null && padFunction.IsEnabled)
             {
-                padFunction.EvaluateAndRun(key);
+                if (padFunction.EvaluateAndRun(key))
+                {
+                    _logger?.Log($"[SYSTEM] Pad function { padFunction.Name } activated");
+                }
             }
         }
     }

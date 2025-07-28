@@ -140,6 +140,7 @@ public class Function
             }
             }
 
+            NumActivations++;
             return "Success";
         }
         return "Disabled";

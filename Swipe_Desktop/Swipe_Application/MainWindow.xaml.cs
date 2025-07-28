@@ -16,6 +16,7 @@ namespace Swipe_Application
 public partial class MainWindow : Window
 {
     public FunctionManager FunctionManager { get; }
+    public Logger Logger { get; }
     private BandDevice? _bandDevice;
     private PadDevice? _padDevice;
     private NotifyIcon _notifyIcon;
@@ -24,6 +25,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         Closing += MainWindow_Closing;
+
+        Logger = new Logger();
 
         Directory.CreateDirectory(@"Functions");
 
@@ -35,10 +38,11 @@ public partial class MainWindow : Window
         _padDevice.OnConnection += UpdatePadConnectionStatus;
         _padDevice.OnStatus += UpdatePadDataStatus;
 
-        _bandDevice.Start();
-        _padDevice.Start();
+        _ = _bandDevice.Start();
+        _ = _padDevice.Start();
 
         FunctionManager = new FunctionManager(_bandDevice, _padDevice);
+        FunctionManager.AddLogger(Logger);
 
         _notifyIcon = new NotifyIcon();
         string resourceName = "Swipe_Application.Icon1.ico";
@@ -83,7 +87,8 @@ public partial class MainWindow : Window
 
         HomeViewControl.Unload();
         FunctionViewControl.Unload();
-        DataViewControl.Unload();
+        CurveDebuggerViewControl.Unload();
+        SettingsViewControl.Unload();
     }
 
     protected override void OnStateChanged(EventArgs e)
@@ -103,7 +108,8 @@ public partial class MainWindow : Window
         Activate();
         HomeViewControl.Visibility = Visibility.Visible;
         FunctionViewControl.Visibility = Visibility.Collapsed;
-        DataViewControl.Visibility = Visibility.Collapsed;
+        CurveDebuggerViewControl.Visibility = Visibility.Collapsed;
+        SettingsViewControl.Visibility = Visibility.Collapsed;
         FunctionManager.IsExecutionEnabled = true;
     }
 
@@ -111,7 +117,8 @@ public partial class MainWindow : Window
     {
         HomeViewControl.Visibility = Visibility.Visible;
         FunctionViewControl.Visibility = Visibility.Collapsed;
-        DataViewControl.Visibility = Visibility.Collapsed;
+        CurveDebuggerViewControl.Visibility = Visibility.Collapsed;
+        SettingsViewControl.Visibility = Visibility.Collapsed;
         FunctionManager.IsExecutionEnabled = true;
     }
 
@@ -119,15 +126,26 @@ public partial class MainWindow : Window
     {
         HomeViewControl.Visibility = Visibility.Collapsed;
         FunctionViewControl.Visibility = Visibility.Visible;
-        DataViewControl.Visibility = Visibility.Collapsed;
+        CurveDebuggerViewControl.Visibility = Visibility.Collapsed;
+        SettingsViewControl.Visibility = Visibility.Collapsed;
         FunctionManager.IsExecutionEnabled = false;
     }
 
-    private void Data_Click(object sender, RoutedEventArgs e)
+    private void CurveDebugging_Click(object sender, RoutedEventArgs e)
     {
         HomeViewControl.Visibility = Visibility.Collapsed;
         FunctionViewControl.Visibility = Visibility.Collapsed;
-        DataViewControl.Visibility = Visibility.Visible;
+        CurveDebuggerViewControl.Visibility = Visibility.Visible;
+        SettingsViewControl.Visibility = Visibility.Collapsed;
+        FunctionManager.IsExecutionEnabled = true;
+    }
+
+    private void Settings_Click(object sender, RoutedEventArgs e)
+    {
+        HomeViewControl.Visibility = Visibility.Collapsed;
+        FunctionViewControl.Visibility = Visibility.Collapsed;
+        CurveDebuggerViewControl.Visibility = Visibility.Collapsed;
+        SettingsViewControl.Visibility = Visibility.Visible;
         FunctionManager.IsExecutionEnabled = true;
     }
 

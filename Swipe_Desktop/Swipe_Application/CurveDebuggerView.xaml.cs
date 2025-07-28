@@ -9,7 +9,7 @@ using Color = System.Windows.Media.Color;
 
 namespace Swipe_Application
 {
-public partial class DataView : UserControl
+public partial class CurveDebuggerView : UserControl
 {
     private List<SeriesCollection> _seriesList = new List<SeriesCollection>();
     private int _downSampleRate = 10;
@@ -17,7 +17,7 @@ public partial class DataView : UserControl
 
     private CurveCollector? _collector = null;
 
-    public DataView()
+    public CurveDebuggerView()
     {
         InitializeComponent();
         Loaded += OnLoaded;

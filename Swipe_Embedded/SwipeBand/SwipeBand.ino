@@ -33,7 +33,7 @@ void setup() {
     }
   }
 
-  BLE.setLocalName("Swipe v.1.0");
+  BLE.setLocalName("Swipe Band v.1.0");
   BLE.setAdvertisedService(bleService);
   bleService.addCharacteristic(bleCharacteristic);
   BLE.addService(bleService);
