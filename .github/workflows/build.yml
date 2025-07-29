@@ -1,0 +1,24 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore NuGet packages
+      run: dotnet restore Swipe_Desktop/Swipe_Desktop.sln
+
+    - name: Build WPF application
+      run: dotnet build Swipe_Desktop/Swipe_Desktop.sln --configuration Release

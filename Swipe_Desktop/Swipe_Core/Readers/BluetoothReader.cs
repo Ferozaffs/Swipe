@@ -39,7 +39,6 @@ public class BluetoothReader : IDataReader
             if (device != null)
             {
                 IsMonitoring = true;
-                OnConnection?.Invoke(IsMonitoring);
                 _ = MonitorDevice(device);
                 return true;
             }
@@ -56,6 +55,7 @@ public class BluetoothReader : IDataReader
 
     private async Task MonitorDevice(BluetoothLEDevice device)
     {
+        var connectionInterval = 1000;
         var connectionTries = 0;
         while (IsMonitoring)
         {
@@ -68,16 +68,18 @@ public class BluetoothReader : IDataReader
 
             while (device.ConnectionStatus == BluetoothConnectionStatus.Connected && _stopped == false)
             {
+                connectionInterval = 1000;
                 connectionTries = 0;
+                OnConnection?.Invoke(true);
                 await ReadDeviceData(device);
             }
 
-            Thread.Sleep(1000);
+            Thread.Sleep(connectionInterval);
             if (connectionTries >= 3)
             {
-                Debug.WriteLine("Exceeded connection attempts...");
-                IsMonitoring = false;
-                OnConnection?.Invoke(IsMonitoring);
+                Debug.WriteLine("Exceeded connection attempts...reducing reconnection interval");
+                connectionInterval = 10000;
+                OnConnection?.Invoke(false);
             }
         }
     }
@@ -105,8 +107,15 @@ public class BluetoothReader : IDataReader
                                 lastUpdateTime = DateTime.Now;
                             };
 
-                            await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
-                                GattClientCharacteristicConfigurationDescriptorValue.Notify);
+                            try
+                            {
+                                await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
+                                    GattClientCharacteristicConfigurationDescriptorValue.Notify);
+                            }
+                            catch
+                            {
+                                return;
+                            }
 
                             while ((DateTime.Now - lastUpdateTime).TotalSeconds < 5)
                             {

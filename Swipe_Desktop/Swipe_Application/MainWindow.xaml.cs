@@ -4,15 +4,11 @@ using System.Windows;
 using System.ComponentModel;
 using System.Windows.Media;
 using System.IO;
-using System.Reflection;
 using Swipe_Core.Devices;
 using Swipe_Core.Functions;
 
 namespace Swipe_Application
 {
-/// <summary>
-/// Interaction logic for MainWindow.xaml
-/// </summary>
 public partial class MainWindow : Window
 {
     public FunctionManager FunctionManager { get; private set; }
@@ -263,7 +259,7 @@ public partial class MainWindow : Window
     private async void FunctionActivatied(bool obj)
     {
         UpdateIcon(System.Drawing.Color.LightGreen);
-        await Task.Delay(3000);
+        await Task.Delay(1000);
 
         UpdateIcon(System.Drawing.Color.LightYellow);
     }

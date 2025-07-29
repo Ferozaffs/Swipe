@@ -11,6 +11,13 @@ int inputPins[] = {
 };
 
 bool hasInput = false;
+unsigned long lastActivityTime = millis();
+const unsigned long idleTimeout = 15 * 60 * 1000;
+
+const unsigned long pulseDuration = 100; 
+const unsigned long pulseInterval = 30000;   
+unsigned long previousMillis = 0;
+bool ledOn = false;
 
 void setupPins() {
   Serial.println("Setting pins");
@@ -40,6 +47,43 @@ String getPinState() {
   return state;
 }
 
+void enterDeepSleep() {
+  uint64_t pinMask = 0;
+  for (int i = 0; i < sizeof(inputPins) / sizeof(inputPins[0]); i++) {
+    pinMask |= 1ULL << inputPins[i];
+  }
+
+  digitalWrite(33, LOW);
+  esp_sleep_enable_ext0_wakeup(GPIO_NUM_25, LOW);
+  esp_deep_sleep_start();
+}
+
+void updateStatusLED() {
+  int currentMillis = millis();
+  if (!ledOn && currentMillis - previousMillis >= pulseInterval) {
+    digitalWrite(33, HIGH);
+    ledOn = true;
+    previousMillis = currentMillis;
+  } else if (ledOn && currentMillis - previousMillis >= pulseDuration) {
+    digitalWrite(33, LOW);
+    ledOn = false;
+    previousMillis = currentMillis;
+  }
+}
+
+void updateStatus() {
+  if (hasInput) {
+    lastActivityTime = millis();
+    ledOn = false;
+    previousMillis = 0;
+  }
+  updateStatusLED();
+
+  if (millis() - lastActivityTime > idleTimeout) {
+    enterDeepSleep();
+  }
+}
+
 void setup() {  
   Serial.begin(115200);
 
@@ -58,6 +102,8 @@ void setup() {
   BLE.advertise();
 
   Serial.println("BT: advertising");
+
+  pinMode(33, OUTPUT);
 }
 
 void loop() {
@@ -67,7 +113,8 @@ void loop() {
       Serial.println(central.address());
 
       while (central.connected()) {
-          bleCharacteristic.writeValue(getPinState()); 
+          bleCharacteristic.writeValue(getPinState());         
+          updateStatus();
           delay(10);
       }
 
@@ -76,6 +123,8 @@ void loop() {
     }
     else {
       Serial.println(getPinState());
+      updateStatus();
+
       delay(10);
     }
 }
