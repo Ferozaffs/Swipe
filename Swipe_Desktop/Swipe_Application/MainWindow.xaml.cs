@@ -115,6 +115,24 @@ public partial class MainWindow : Window
         base.OnStateChanged(e);
     }
 
+    public void CompactMenu(bool compact)
+    {
+        if (compact)
+        {
+            HomeDetails.Visibility = Visibility.Collapsed;
+            FunctionDetails.Visibility = Visibility.Collapsed;
+            CurvesDetails.Visibility = Visibility.Collapsed;
+            SettingsDetails.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            HomeDetails.Visibility = Visibility.Visible;
+            FunctionDetails.Visibility = Visibility.Visible;
+            CurvesDetails.Visibility = Visibility.Visible;
+            SettingsDetails.Visibility = Visibility.Visible;
+        }
+    }
+
     private void ShowWindow(object? sender, EventArgs e)
     {
         Show();

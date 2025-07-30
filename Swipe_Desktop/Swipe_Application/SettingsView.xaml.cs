@@ -5,7 +5,6 @@ using System.Windows;
 using Microsoft.Win32;
 using System.Reflection;
 using System.IO;
-using static Swipe_Application.SettingsView;
 using System.Windows.Controls;
 
 namespace Swipe_Application
@@ -15,6 +14,7 @@ public partial class SettingsView : System.Windows.Controls.UserControl
     public class SettingsData
     {
         public bool AutoStart { get; set; } = false;
+        public bool CompactMenu { get; set; } = false;
         public float DTWTreshold { get; set; } = 2.25f;
     }
 
@@ -45,6 +45,11 @@ public partial class SettingsView : System.Windows.Controls.UserControl
         }
         Load();
         _loaded = true;
+
+        if (mainWindow != null)
+        {
+            mainWindow.CompactMenu(_settingsData.CompactMenu);
+        }
     }
 
     public void Unload()
@@ -132,6 +137,38 @@ public partial class SettingsView : System.Windows.Controls.UserControl
         Save();
     }
 
+    private void CompactMenuCheck_Checked(object sender, RoutedEventArgs e)
+    {
+        if (_loaded == false)
+        {
+            return;
+        }
+
+        _settingsData.CompactMenu = true;
+        var mainWindow = Utils.FindParent<MainWindow>(this);
+        if (mainWindow != null)
+        {
+            mainWindow.CompactMenu(_settingsData.CompactMenu);
+        }
+        Save();
+    }
+
+    private void CompactMenuCheck_Unchecked(object sender, RoutedEventArgs e)
+    {
+        if (_loaded == false)
+        {
+            return;
+        }
+
+        _settingsData.CompactMenu = true;
+        var mainWindow = Utils.FindParent<MainWindow>(this);
+        if (mainWindow != null)
+        {
+            mainWindow.CompactMenu(_settingsData.CompactMenu);
+        }
+        Save();
+    }
+
     private bool Save()
     {
 
@@ -163,9 +200,11 @@ public partial class SettingsView : System.Windows.Controls.UserControl
         }
 
         _settingsData.AutoStart = loaded.AutoStart;
+        _settingsData.CompactMenu = loaded.CompactMenu;
         _settingsData.DTWTreshold = loaded.DTWTreshold;
 
         AutostartCheck.IsChecked = loaded.AutoStart;
+        CompactMenuCheck.IsChecked = loaded.CompactMenu;
         _functionManager?.SetDTWTreshold(loaded.DTWTreshold);
         DTWSlider.Value = loaded.DTWTreshold;
 

@@ -1,6 +1,7 @@
 ﻿using Swipe_Core;
 using Swipe_Core.Devices;
 using Swipe_Core.Functions;
+using System.Management.Automation.Runspaces;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -28,7 +29,10 @@ public partial class FunctionView : System.Windows.Controls.UserControl
     {
         FuncTypeCombo.ItemsSource = Enum.GetValues(typeof(FunctionType));
         FuncInterfaceCombo.ItemsSource = Enum.GetValues(typeof(InterfaceType));
+        CommandCombo.ItemsSource = Enum.GetValues(typeof(Swipe_Core.Commands.Command.CommandType));
+        CommandInstanceCombo.ItemsSource = Enumerable.Range(0, 21).ToList();
         PadKeyCombo.ItemsSource = Enum.GetValues(typeof(PadDevice.PadKey));
+        PadKeyModifierCombo.ItemsSource = Enum.GetValues(typeof(PadFunction.KeyModifier));
 
         var mainWindow = Utils.FindParent<MainWindow>(this);
         if (mainWindow != null)
@@ -78,15 +82,19 @@ public partial class FunctionView : System.Windows.Controls.UserControl
         {
             FuncEnabledCheck.IsChecked = true;
             FuncNameTextBox.Text = "";
-            FuncTypeCombo.SelectedItem = FunctionType.Powershell;
+            FuncTypeCombo.SelectedItem = FunctionType.Launch;
             FuncInterfaceCombo.SelectedItem = InterfaceType.Keyboard;
-            FuncCommandTextBox.Text = "";
+            PowershellTextBox.Text = "";
+            FileTextBox.Text = "";
+            CommandCombo.SelectedValue = Swipe_Core.Commands.Command.CommandType.None;
+            CommandInstanceCombo.SelectedValue = 0;
 
             FuncEnabledCheck.IsEnabled = false;
             FuncNameTextBox.IsEnabled = false;
             FuncTypeCombo.IsEnabled = false;
             FuncInterfaceCombo.IsEnabled = false;
-            FuncCommandTextBox.IsEnabled = false;
+
+            UpdateFunctionCommandGUI(FunctionType.Launch);
         }
         else
         {
@@ -94,13 +102,32 @@ public partial class FunctionView : System.Windows.Controls.UserControl
             FuncNameTextBox.Text = func.Name;
             FuncTypeCombo.SelectedItem = func.FuncType;
             FuncInterfaceCombo.SelectedItem = func.Interface;
-            FuncCommandTextBox.Text = func.Command;
+
+            switch (func.FuncType)
+            {
+            case FunctionType.Powershell: {
+                PowershellTextBox.Text = func.CommandString;
+                break;
+            }
+            case FunctionType.Launch:
+            case FunctionType.PowershellScript: {
+                FileTextBox.Text = func.CommandString;
+                FileArgsTextBox.Text = func.Arguments;
+                break;
+            }
+            case FunctionType.Command: {
+                CommandCombo.SelectedValue = func.CommandType;
+                CommandInstanceCombo.SelectedValue = func.CommandInstance;
+                break;
+            }
+            }
 
             FuncEnabledCheck.IsEnabled = true;
             FuncNameTextBox.IsEnabled = true;
             FuncTypeCombo.IsEnabled = true;
             FuncInterfaceCombo.IsEnabled = true;
-            FuncCommandTextBox.IsEnabled = true;
+
+            UpdateFunctionCommandGUI(func.FuncType);
         }
 
         if (func is BandFunction)
@@ -131,6 +158,30 @@ public partial class FunctionView : System.Windows.Controls.UserControl
             PadPanel.Visibility = Visibility.Visible;
 
             PadKeyCombo.SelectedValue = (func as PadFunction)?.Key;
+        }
+    }
+
+    private void UpdateFunctionCommandGUI(FunctionType type)
+    {
+        PowershellTextBox.Visibility = Visibility.Collapsed;
+        FilePanel.Visibility = Visibility.Collapsed;
+        CommandPanel.Visibility = Visibility.Collapsed;
+
+        switch (type)
+        {
+        case FunctionType.Powershell: {
+            PowershellTextBox.Visibility = Visibility.Visible;
+            break;
+        }
+        case FunctionType.Launch:
+        case FunctionType.PowershellScript: {
+            FilePanel.Visibility = Visibility.Visible;
+            break;
+        }
+        case FunctionType.Command: {
+            CommandPanel.Visibility = Visibility.Visible;
+            break;
+        }
         }
     }
 
@@ -182,7 +233,8 @@ public partial class FunctionView : System.Windows.Controls.UserControl
                 FunctionDeleteColumn.Children.Clear();
                 FunctionNameColumn.Children.Clear();
                 FunctionTypeColumn.Children.Clear();
-                FunctionDetailsColumn.Children.Clear();
+                FunctionCommandColumn.Children.Clear();
+                FunctionArgumentColumn.Children.Clear();
 
                 if (functions.Count == 0)
                 {
@@ -238,16 +290,27 @@ public partial class FunctionView : System.Windows.Controls.UserControl
                     };
                     FunctionTypeColumn.Children.Add(funcType);
 
-                    var funcDetails =
-                        new TextBlock { Text = function.Value.Command, Foreground = new SolidColorBrush(color),
+                    var funcCommand =
+                        new TextBlock { Text = function.Value.CommandString, Foreground = new SolidColorBrush(color),
                                         FontSize = 8, Height = 24, FontWeight = fontWeight };
-                    funcDetails.MouseLeftButtonDown += (s, e) =>
+                    funcCommand.MouseLeftButtonDown += (s, e) =>
                     {
                         _currentFunction = _functionManager.GetFunction(function.Key);
                         UpdateFunctionList(_functionManager.GetFunctions());
                         UpdateEditingStatus();
                     };
-                    FunctionDetailsColumn.Children.Add(funcDetails);
+                    FunctionCommandColumn.Children.Add(funcCommand);
+
+                    var funcArgument =
+                        new TextBlock { Text = function.Value.Arguments, Foreground = new SolidColorBrush(color),
+                                        FontSize = 8, Height = 24, FontWeight = fontWeight };
+                    funcCommand.MouseLeftButtonDown += (s, e) =>
+                    {
+                        _currentFunction = _functionManager.GetFunction(function.Key);
+                        UpdateFunctionList(_functionManager.GetFunctions());
+                        UpdateEditingStatus();
+                    };
+                    FunctionArgumentColumn.Children.Add(funcArgument);
                 }
 
                 if (foundMatchingFunction == false)
@@ -287,6 +350,7 @@ public partial class FunctionView : System.Windows.Controls.UserControl
         if (_currentFunction != null)
         {
             _currentFunction.SetFunctionType((FunctionType)((System.Windows.Controls.ComboBox)sender).SelectedItem);
+            UpdateFunctionCommandGUI(_currentFunction.FuncType);
         }
     }
 
@@ -329,7 +393,7 @@ public partial class FunctionView : System.Windows.Controls.UserControl
                     _currentFunction = _functionManager.ConvertPadToBand(padFunction);
                     UpdateEditingStatus();
                 }
-                else if (interfaceType == InterfaceType.Pad)
+                else if (interfaceType == InterfaceType.Keyboard)
                 {
                     _currentFunction = _functionManager.ConvertPadToKeyboard(padFunction);
                     UpdateEditingStatus();
@@ -338,11 +402,64 @@ public partial class FunctionView : System.Windows.Controls.UserControl
         }
     }
 
-    private void FuncCommandTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    private void PowershellTextBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         if (_currentFunction != null)
         {
             _currentFunction.SetPowershellCommand(((System.Windows.Controls.TextBox)sender).Text);
+        }
+    }
+
+    private void FileTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_currentFunction != null)
+        {
+            _currentFunction.SetFilepath(((System.Windows.Controls.TextBox)sender).Text);
+        }
+    }
+
+    private void FileArgsTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_currentFunction != null)
+        {
+            _currentFunction.SetArgs(((System.Windows.Controls.TextBox)sender).Text);
+        }
+    }
+
+    private void FileOpenBtn_Click(object sender, RoutedEventArgs e)
+    {
+        OpenFileDialog openFileDialog = new OpenFileDialog();
+        openFileDialog.Title = "Select a file";
+
+        if (_currentFunction != null && _currentFunction.FuncType == FunctionType.PowershellScript)
+        {
+            openFileDialog.Filter = "Powershell (*.ps1)|*.ps1|All files (*.*)|*.*";
+        }
+        else
+        {
+            openFileDialog.Filter = "Executable (*.exe)|*.exe|All files (*.*)|*.*";
+        }
+
+        if (openFileDialog.ShowDialog() == DialogResult.OK)
+        {
+            FileTextBox.Text = openFileDialog.FileName;
+        }
+    }
+
+    private void CommandCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_currentFunction != null)
+        {
+            _currentFunction.SetCommand(
+                (Swipe_Core.Commands.Command.CommandType)((System.Windows.Controls.ComboBox)sender).SelectedItem);
+        }
+    }
+
+    private void CommandInstanceCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_currentFunction != null)
+        {
+            _currentFunction.SetCommandInstance((int)((System.Windows.Controls.ComboBox)sender).SelectedItem);
         }
     }
 
@@ -354,18 +471,17 @@ public partial class FunctionView : System.Windows.Controls.UserControl
         switch (f.FuncType)
         {
         case FunctionType.Powershell: {
-
-            f.SetPowershellCommand(FuncCommandTextBox.Text);
+            f.SetPowershellCommand(PowershellTextBox.Text);
             break;
         }
         case FunctionType.PowershellScript: {
-
-            f.SetPowershellScriptPath(FuncCommandTextBox.Text);
+            f.SetFilepath(FileTextBox.Text);
+            f.SetArgs(FileArgsTextBox.Text);
             break;
         }
         case FunctionType.Launch: {
-
-            f.SetExe(FuncCommandTextBox.Text);
+            f.SetFilepath(FileTextBox.Text);
+            f.SetArgs(FileArgsTextBox.Text);
             break;
         }
         }
@@ -584,6 +700,15 @@ public partial class FunctionView : System.Windows.Controls.UserControl
         if (padFunction != null)
         {
             padFunction.SetKey((PadDevice.PadKey)((System.Windows.Controls.ComboBox)sender).SelectedItem);
+        }
+    }
+
+    private void PadKeyModifierCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        var padFunction = _currentFunction as PadFunction;
+        if (padFunction != null)
+        {
+            padFunction.SetModifier((PadFunction.KeyModifier)((System.Windows.Controls.ComboBox)sender).SelectedItem);
         }
     }
 }

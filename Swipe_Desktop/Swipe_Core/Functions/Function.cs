@@ -1,17 +1,27 @@
-﻿using System.Diagnostics;
+﻿using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Management.Automation;
+using System.Management.Automation.Runspaces;
+using System.Runtime.InteropServices;
 using Newtonsoft.Json;
+using Swipe_Core.Commands;
 
 namespace Swipe_Core.Functions
 {
 
 public class Function
 {
+    [DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
     public enum FunctionType
     {
         Powershell,
         PowershellScript,
         Launch,
+        Command,
     }
     public enum InterfaceType
     {
@@ -33,9 +43,25 @@ public class Function
     [JsonProperty]
     public InterfaceType Interface { get; private set; } = InterfaceType.Keyboard;
     [JsonProperty]
-    public string Command { get; private set; } = "";
+    public string CommandString { get; private set; } = "";
+    [JsonProperty]
+    public Commands.Command.CommandType CommandType { get; private set; } = Commands.Command.CommandType.None;
+    [JsonProperty]
+    public int CommandInstance { get; private set; } = 0;
+    [JsonProperty]
+    public string Arguments { get; private set; } = "";
     [JsonProperty]
     public int NumActivations { get; set; } = 0;
+
+    private Commands.Command? Command = null;
+
+    public void PostLoad()
+    {
+        if (FuncType == FunctionType.Command && CommandType != Commands.Command.CommandType.None)
+        {
+            SetCommand(CommandType, false);
+        }
+    }
 
     public void Enable()
     {
@@ -70,19 +96,70 @@ public class Function
     }
     public void SetPowershellCommand(string command)
     {
-        Command = command;
+        CommandString = command;
         Save();
     }
-    public void SetPowershellScriptPath(string exe)
+    public void SetFilepath(string filepath)
     {
-        Command = exe;
+        CommandString = filepath;
         Save();
     }
 
-    public void SetExe(string exe)
+    public void SetArgs(string args)
     {
-        Command = exe;
+        Arguments = args;
         Save();
+    }
+
+    public void SetCommand(Commands.Command.CommandType commandType, bool save = true)
+    {
+        CommandType = commandType;
+        var identifier = commandType.ToString() + "_" + CommandInstance;
+        Commands.Command ? value;
+        Commands.Command.CommandInstances.TryGetValue(identifier, out value);
+
+        if (value != null)
+        {
+            Command = value;
+        }
+        else
+        {
+            switch (commandType)
+            {
+            case Commands.Command.CommandType.CenterAndFullscreen: {
+                Command = new CenterAndFullscreenCommand();
+                break;
+            }
+            case Commands.Command.CommandType.RegisterApplication: {
+                Command = new RegisterApplicationCommand();
+                break;
+            }
+            case Commands.Command.CommandType.ForegroundApplication: {
+                Command = new ForegroundApplicationCommand();
+                break;
+            }
+            }
+
+            if (Command != null)
+            {
+                Command.Instance = CommandInstance;
+                Commands.Command.CommandInstances.Add(identifier, Command);
+            }
+        }
+
+        if (save)
+        {
+            Save();
+        }
+    }
+
+    public void SetCommandInstance(int instance)
+    {
+        CommandInstance = instance;
+        if (Command != null)
+        {
+            SetCommand(CommandType);
+        }
     }
 
     public string RunFunction()
@@ -103,14 +180,14 @@ public class Function
                             .AddParameter("Scope", "Process")
                             .Invoke();
 
-                        ps.AddScript(Command).Invoke();
+                        ps.AddScript(CommandString).Invoke();
 
                         if (ps.Streams.Error.Count > 0)
                         {
                             string errorString = "Errors detected:";
                             foreach (var error in ps.Streams.Error)
                             {
-                                errorString += $"- {error.ToString()}";
+                                errorString += $"- {error}";
                             }
                             return errorString;
                         }
@@ -122,20 +199,46 @@ public class Function
                 }
                 break;
             case FunctionType.PowershellScript: {
-                ProcessStartInfo startInfo =
-                    new ProcessStartInfo() { FileName = "powershell.exe",
-                                             Arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{Command}\"",
-                                             UseShellExecute = false,
-                                             RedirectStandardOutput = false,
-                                             RedirectStandardError = false,
-                                             CreateNoWindow = true };
+                ProcessStartInfo startInfo = new ProcessStartInfo() {
+                    FileName = "powershell.exe",
+                    Arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{CommandString}\"  {Arguments}",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = false,
+                    RedirectStandardError = false,
+                    CreateNoWindow = true
+                };
                 Process.Start(startInfo);
                 break;
             }
             case FunctionType.Launch: {
-                ProcessStartInfo start = new ProcessStartInfo();
-                start.FileName = Command;
-                Process.Start(start);
+                Process[] processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(CommandString));
+
+                if (processes.Length > 0 && Arguments.Contains("NewProcess") == false)
+                {
+                    IntPtr hWnd = processes[0].MainWindowHandle;
+                    if (hWnd != IntPtr.Zero)
+                    {
+                        ShowWindow(hWnd, 9);
+                        SetForegroundWindow(hWnd);
+                    }
+                }
+                else
+                {
+                    ProcessStartInfo start = new ProcessStartInfo();
+                    start.FileName = CommandString;
+                    start.Arguments = Arguments;
+                    Process.Start(start);
+                }
+                break;
+            }
+            case FunctionType.Command: {
+                if (Command != null)
+                {
+                    if (Command.Execute())
+                    {
+                        return "Failed";
+                    }
+                }
                 break;
             }
             }
@@ -174,8 +277,10 @@ public class Function
         try
         {
             string json = File.ReadAllText(fileInfo.FullName);
-            return JsonConvert.DeserializeObject<Function>(
+            var func = JsonConvert.DeserializeObject<Function>(
                 json, new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All });
+            func?.PostLoad();
+            return func;
         }
         catch
         {

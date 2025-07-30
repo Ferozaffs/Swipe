@@ -2,6 +2,7 @@
 using Swipe_Core.Devices;
 using System;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Swipe_Core.Functions
 {
@@ -256,7 +257,32 @@ public class FunctionManager
             var padFunction = function.Value as PadFunction;
             if (padFunction != null && padFunction.IsEnabled)
             {
-                if (padFunction.EvaluateAndRun(key))
+                var modifier = PadFunction.KeyModifier.None;
+                if (_keyboardDevice != null)
+                {
+                    bool ctrl = _keyboardDevice.Keys.Contains(0x11);
+                    bool shift = _keyboardDevice.Keys.Contains(0x10);
+                    bool alt = _keyboardDevice.Keys.Contains(0x12);
+
+                    if (ctrl && shift && alt)
+                        modifier = PadFunction.KeyModifier.CtrlAltShift;
+                    else if (ctrl && shift)
+                        modifier = PadFunction.KeyModifier.CtrlShift;
+                    else if (ctrl && alt)
+                        modifier = PadFunction.KeyModifier.CtrlAlt;
+                    else if (alt && shift)
+                        modifier = PadFunction.KeyModifier.AltShift;
+                    else if (ctrl)
+                        modifier = PadFunction.KeyModifier.Ctrl;
+                    else if (shift)
+                        modifier = PadFunction.KeyModifier.Shift;
+                    else if (alt)
+                        modifier = PadFunction.KeyModifier.Alt;
+                    else
+                        modifier = PadFunction.KeyModifier.None;
+                }
+
+                if (padFunction.EvaluateAndRun(key, modifier))
                 {
                     ActivatedFunctions.Add(padFunction);
                     OnActivation?.Invoke(true);

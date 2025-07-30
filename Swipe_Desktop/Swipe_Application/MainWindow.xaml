@@ -14,7 +14,7 @@
 
     <Grid Background="#444444">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="64" />
+            <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid Grid.Column="0" Background="#222222">
@@ -22,45 +22,104 @@
                 <RowDefinition Height="*" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <StackPanel Grid.Row="0">
+            <StackPanel Grid.Row="0" Margin="20,0,20,0">
                 <Button
-                    x:Name="HomeBtn"
-                    Width="36"
-                    Height="36"
-                    Margin="0,10,0,10"
+                    Padding="0"
+                    HorizontalAlignment="Left"
+                    Background="Transparent"
+                    BorderThickness="0"
                     Click="Home_Click"
-                    Content="⌂"
-                    FontSize="28"
-                    Style="{StaticResource FlatDarkButton}" />
+                    Style="{StaticResource FlatDarkButton}">
+                    <WrapPanel>
+                        <TextBlock
+                            Margin="0,10,0,10"
+                            VerticalAlignment="Center"
+                            FontSize="28"
+                            Text="⌂" />
+                        <TextBlock
+                            x:Name="HomeDetails"
+                            Margin="5"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="Gray"
+                            Text="Home" />
+                    </WrapPanel>
+                </Button>
+
                 <Button
-                    x:Name="FunctionsBtn"
-                    Width="36"
-                    Height="36"
-                    Margin="0,10,0,10"
+                    Padding="0"
+                    HorizontalAlignment="Left"
+                    Background="Transparent"
+                    BorderThickness="0"
                     Click="Functions_Click"
-                    Content="ƒ𝑥"
-                    FontSize="24"
-                    Style="{StaticResource FlatDarkButton}" />
+                    Style="{StaticResource FlatDarkButton}">
+                    <WrapPanel>
+                        <TextBlock
+                            Margin="0,10,0,10"
+                            VerticalAlignment="Center"
+                            FontSize="24"
+                            Text="ƒ𝑥" />
+                        <TextBlock
+                            x:Name="FunctionDetails"
+                            Margin="5"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="Gray"
+                            Text="Functions" />
+                    </WrapPanel>
+                </Button>
+
             </StackPanel>
-            <StackPanel Grid.Row="1" VerticalAlignment="Bottom">
+            <StackPanel
+                Grid.Row="1"
+                Margin="20,0,20,0"
+                VerticalAlignment="Bottom">
                 <Button
-                    x:Name="CurveDebuggingBtn"
-                    Width="36"
-                    Height="36"
-                    Margin="0,10,0,10"
+                    Padding="0"
+                    HorizontalAlignment="Left"
+                    Background="Transparent"
+                    BorderThickness="0"
                     Click="CurveDebugging_Click"
-                    Content="📈"
-                    FontSize="20"
-                    Style="{StaticResource FlatDarkButton}" />
+                    Style="{StaticResource FlatDarkButton}">
+                    <WrapPanel>
+                        <TextBlock
+                            Margin="0,10,0,10"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            Text="📈" />
+                        <TextBlock
+                            x:Name="CurvesDetails"
+                            Margin="5"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="Gray"
+                            Text="Curves" />
+                    </WrapPanel>
+                </Button>
+
                 <Button
-                    x:Name="SettingsBtn"
-                    Width="36"
-                    Height="36"
-                    Margin="0,10,0,10"
+                    Padding="0"
+                    HorizontalAlignment="Left"
+                    Background="Transparent"
+                    BorderThickness="0"
                     Click="Settings_Click"
-                    Content="⚙️"
-                    FontSize="20"
-                    Style="{StaticResource FlatDarkButton}" />
+                    Style="{StaticResource FlatDarkButton}">
+                    <WrapPanel>
+                        <TextBlock
+                            Margin="0,10,0,10"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            Text="⚙️" />
+                        <TextBlock
+                            x:Name="SettingsDetails"
+                            Margin="5"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="Gray"
+                            Text="Settings" />
+                    </WrapPanel>
+                </Button>
+
             </StackPanel>
         </Grid>
         <StackPanel Grid.Column="1">

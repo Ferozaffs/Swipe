@@ -27,8 +27,9 @@
         <Grid Background="#111111">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="36" />
-                <ColumnDefinition Width="256" />
                 <ColumnDefinition Width="128" />
+                <ColumnDefinition Width="128" />
+                <ColumnDefinition Width="256" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <TextBlock
@@ -46,6 +47,11 @@
                 FontSize="14"
                 Foreground="Gray"
                 Text="Command" />
+            <TextBlock
+                Grid.Column="4"
+                FontSize="14"
+                Foreground="Gray"
+                Text="Arguments" />
         </Grid>
         <ScrollViewer MaxHeight="200" VerticalScrollBarVisibility="Auto">
             <Grid Margin="0,5,0,5" Background="#333333">
@@ -58,7 +64,8 @@
                 <StackPanel x:Name="FunctionDeleteColumn" Grid.Column="0" />
                 <StackPanel x:Name="FunctionNameColumn" Grid.Column="1" />
                 <StackPanel x:Name="FunctionTypeColumn" Grid.Column="2" />
-                <StackPanel x:Name="FunctionDetailsColumn" Grid.Column="3" />
+                <StackPanel x:Name="FunctionCommandColumn" Grid.Column="3" />
+                <StackPanel x:Name="FunctionArgumentColumn" Grid.Column="4" />
             </Grid>
         </ScrollViewer>
         <Canvas Height="2" Background="#333333" />
@@ -155,6 +162,7 @@
                                 Foreground="Gray"
                                 Text="Script:" />
                             <Button
+                                x:Name="ScriptRunBtn"
                                 Width="60"
                                 Margin="5,5,0,0"
                                 HorizontalAlignment="Left"
@@ -163,7 +171,7 @@
                             </Button>
                         </StackPanel>
                         <TextBox
-                            x:Name="FuncCommandTextBox"
+                            x:Name="PowershellTextBox"
                             Width="350"
                             Height="85"
                             Margin="5"
@@ -173,10 +181,89 @@
                             FontSize="12"
                             Foreground="LightGray"
                             HorizontalScrollBarVisibility="Auto"
-                            IsEnabled="False"
                             Text=""
-                            TextChanged="FuncCommandTextBox_TextChanged"
-                            VerticalScrollBarVisibility="Auto" />
+                            TextChanged="PowershellTextBox_TextChanged"
+                            VerticalScrollBarVisibility="Auto"
+                            Visibility="Collapsed" />
+                        <StackPanel x:Name="FilePanel" Visibility="Collapsed">
+                            <WrapPanel>
+                                <TextBox
+                                    x:Name="FileTextBox"
+                                    Width="280"
+                                    Margin="5"
+                                    VerticalAlignment="Top"
+                                    AcceptsReturn="True"
+                                    Background="#333333"
+                                    BorderThickness="0"
+                                    FontSize="14"
+                                    Foreground="LightGray"
+                                    Text=""
+                                    TextChanged="FileTextBox_TextChanged" />
+                                <Button
+                                    x:Name="FileOpenBtn"
+                                    Width="60"
+                                    Margin="5"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Top"
+                                    Click="FileOpenBtn_Click">
+                                    Open
+                                </Button>
+                            </WrapPanel>
+                            <WrapPanel>
+                                <TextBlock
+                                    Width="55"
+                                    Margin="5"
+                                    FontSize="10"
+                                    Foreground="Gray"
+                                    Text="Arguments:" />
+                                <TextBox
+                                    x:Name="FileArgsTextBox"
+                                    Width="280"
+                                    Margin="5"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Top"
+                                    AcceptsReturn="True"
+                                    Background="#333333"
+                                    BorderThickness="0"
+                                    FontSize="14"
+                                    Foreground="LightGray"
+                                    Text=""
+                                    TextChanged="FileArgsTextBox_TextChanged" />
+                            </WrapPanel>
+                        </StackPanel>
+                        <StackPanel x:Name="CommandPanel" Visibility="Collapsed">
+                            <WrapPanel>
+                                <TextBlock
+                                    Width="100"
+                                    Margin="5"
+                                    FontSize="10"
+                                    Foreground="Gray"
+                                    Text="Command:" />
+                                <ComboBox
+                                    x:Name="CommandCombo"
+                                    Width="240"
+                                    Margin="5"
+                                    Background="#333333"
+                                    BorderThickness="0"
+                                    SelectionChanged="CommandCombo_SelectionChanged" />
+                            </WrapPanel>
+                            <WrapPanel>
+                                <TextBlock
+                                    Width="100"
+                                    Margin="5"
+                                    FontSize="10"
+                                    Foreground="Gray"
+                                    Text="Command instance:" />
+                                <ComboBox
+                                    x:Name="CommandInstanceCombo"
+                                    Width="240"
+                                    Margin="5"
+                                    Background="#333333"
+                                    BorderThickness="0"
+                                    SelectedValue="0"
+                                    SelectionChanged="CommandInstanceCombo_SelectionChanged" />
+                            </WrapPanel>
+                        </StackPanel>
                     </WrapPanel>
                     <TextBlock
                         x:Name="FuncScriptStatus"
@@ -190,6 +277,7 @@
                         FontSize="20"
                         Foreground="Gray"
                         Text="Usage" />
+                    <StackPanel x:Name="FunctionUsagePanel" />
                 </StackPanel>
             </Grid>
         </StackPanel>
@@ -224,8 +312,9 @@
             Visibility="Collapsed">
             <WrapPanel>
                 <TextBlock
+                    Width="70"
                     Margin="5"
-                    FontSize="20"
+                    FontSize="14"
                     Foreground="Gray"
                     Text="Key:" />
                 <ComboBox
@@ -235,6 +324,21 @@
                     Background="#333333"
                     BorderThickness="0"
                     SelectionChanged="PadKeyCombo_SelectionChanged" />
+            </WrapPanel>
+            <WrapPanel>
+                <TextBlock
+                    Width="70"
+                    Margin="5"
+                    FontSize="14"
+                    Foreground="Gray"
+                    Text="Modifier:" />
+                <ComboBox
+                    x:Name="PadKeyModifierCombo"
+                    Width="100"
+                    Margin="5"
+                    Background="#333333"
+                    BorderThickness="0"
+                    SelectionChanged="PadKeyModifierCombo_SelectionChanged" />
             </WrapPanel>
         </StackPanel>
         <StackPanel

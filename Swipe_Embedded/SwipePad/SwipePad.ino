@@ -19,6 +19,8 @@ const unsigned long pulseInterval = 30000;
 unsigned long previousMillis = 0;
 bool ledOn = false;
 
+const int ledStatusPin = 32;
+
 void setupPins() {
   Serial.println("Setting pins");
 
@@ -53,33 +55,33 @@ void enterDeepSleep() {
     pinMask |= 1ULL << inputPins[i];
   }
 
-  digitalWrite(33, LOW);
+  digitalWrite(ledStatusPin, LOW);
   esp_sleep_enable_ext0_wakeup(GPIO_NUM_25, LOW);
   esp_deep_sleep_start();
 }
 
-void updateStatusLED() {
-  int currentMillis = millis();
-  if (!ledOn && currentMillis - previousMillis >= pulseInterval) {
-    digitalWrite(33, HIGH);
+void updateStatusLED(unsigned long millis) {
+  if (!ledOn && millis - previousMillis >= pulseInterval) {
+    digitalWrite(ledStatusPin, HIGH);
     ledOn = true;
-    previousMillis = currentMillis;
-  } else if (ledOn && currentMillis - previousMillis >= pulseDuration) {
-    digitalWrite(33, LOW);
+    previousMillis = millis;
+  } else if (ledOn && millis - previousMillis >= pulseDuration) {
+    digitalWrite(ledStatusPin, LOW);
     ledOn = false;
-    previousMillis = currentMillis;
+    previousMillis = millis;
   }
 }
 
 void updateStatus() {
+  unsigned long currentMillis = millis();
   if (hasInput) {
-    lastActivityTime = millis();
+    lastActivityTime = currentMillis;
     ledOn = false;
     previousMillis = 0;
   }
-  updateStatusLED();
+  updateStatusLED(currentMillis);
 
-  if (millis() - lastActivityTime > idleTimeout) {
+  if (currentMillis - lastActivityTime > idleTimeout) {
     enterDeepSleep();
   }
 }
@@ -103,7 +105,7 @@ void setup() {
 
   Serial.println("BT: advertising");
 
-  pinMode(33, OUTPUT);
+  pinMode(ledStatusPin, OUTPUT);
 }
 
 void loop() {

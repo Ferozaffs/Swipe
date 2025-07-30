@@ -29,6 +29,21 @@
                 IsChecked="False"
                 Unchecked="AutostartCheck_Unchecked" />
         </WrapPanel>
+        <WrapPanel>
+            <TextBlock
+                Margin="5"
+                FontSize="14"
+                Foreground="Gray"
+                Text="Compact menu:" />
+            <CheckBox
+                x:Name="CompactMenuCheck"
+                Width="350"
+                Margin="5,8,5,10"
+                Background="LightGray"
+                Checked="CompactMenuCheck_Checked"
+                IsChecked="False"
+                Unchecked="CompactMenuCheck_Unchecked" />
+        </WrapPanel>
         <Canvas Height="2" Background="#333333" />
         <TextBlock
             Margin="5"

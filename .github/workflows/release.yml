@@ -27,11 +27,17 @@ jobs:
     - name: Publish the app
       run: dotnet publish Swipe_Desktop/Swipe_Application/Swipe_Application.csproj -c Release -o ./publish
 
+    - name: Remove PDB files
+      run: Remove-Item -Path ./publish/*.pdb -Force
+
+    - name: Zip the publish folder
+      run: Compress-Archive -Path ./publish/* -DestinationPath ./Swipe.zip
+
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
         name: Release ${{ github.ref_name }}
         tag_name: ${{ github.ref_name }}
-        files: ./publish/** 
+        files: ./Swipe.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
