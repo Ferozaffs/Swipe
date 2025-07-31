@@ -7,27 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="C:\Users\anton\.nuget\packages\microsoft.powershell.sdk\7.4.10\contentFiles\any\any\runtimes\unix\lib\net8.0\Modules\Microsoft.PowerShell.Host\Microsoft.PowerShell.Host.psd1" />
-    <None Remove="C:\Users\anton\.nuget\packages\microsoft.powershell.sdk\7.4.10\contentFiles\any\any\runtimes\unix\lib\net8.0\Modules\Microsoft.PowerShell.Management\Microsoft.PowerShell.Management.psd1" />
-    <None Remove="C:\Users\anton\.nuget\packages\microsoft.powershell.sdk\7.4.10\contentFiles\any\any\runtimes\unix\lib\net8.0\Modules\Microsoft.PowerShell.Security\Microsoft.PowerShell.Security.psd1" />
-    <None Remove="C:\Users\anton\.nuget\packages\microsoft.powershell.sdk\7.4.10\contentFiles\any\any\runtimes\unix\lib\net8.0\Modules\Microsoft.PowerShell.Utility\Microsoft.PowerShell.Utility.psd1" />
-    <None Remove="C:\Users\anton\.nuget\packages\microsoft.powershell.sdk\7.4.10\contentFiles\any\any\runtimes\win\lib\net8.0\Modules\CimCmdlets\CimCmdlets.psd1" />
-    <None Remove="C:\Users\anton\.nuget\packages\microsoft.powershell.sdk\7.4.10\contentFiles\any\any\runtimes\win\lib\net8.0\Modules\Microsoft.PowerShell.Diagnostics\Diagnostics.format.ps1xml" />
-    <None Remove="C:\Users\anton\.nuget\packages\microsoft.powershell.sdk\7.4.10\contentFiles\any\any\runtimes\win\lib\net8.0\Modules\Microsoft.PowerShell.Diagnostics\Event.format.ps1xml" />
-    <None Remove="C:\Users\anton\.nuget\packages\microsoft.powershell.sdk\7.4.10\contentFiles\any\any\runtimes\win\lib\net8.0\Modules\Microsoft.PowerShell.Diagnostics\GetEvent.types.ps1xml" />
-    <None Remove="C:\Users\anton\.nuget\packages\microsoft.powershell.sdk\7.4.10\contentFiles\any\any\runtimes\win\lib\net8.0\Modules\Microsoft.PowerShell.Diagnostics\Microsoft.PowerShell.Diagnostics.psd1" />
-    <None Remove="C:\Users\anton\.nuget\packages\microsoft.powershell.sdk\7.4.10\contentFiles\any\any\runtimes\win\lib\net8.0\Modules\Microsoft.PowerShell.Host\Microsoft.PowerShell.Host.psd1" />
-    <None Remove="C:\Users\anton\.nuget\packages\microsoft.powershell.sdk\7.4.10\contentFiles\any\any\runtimes\win\lib\net8.0\Modules\Microsoft.PowerShell.Management\Microsoft.PowerShell.Management.psd1" />
-    <None Remove="C:\Users\anton\.nuget\packages\microsoft.powershell.sdk\7.4.10\contentFiles\any\any\runtimes\win\lib\net8.0\Modules\Microsoft.PowerShell.Security\Microsoft.PowerShell.Security.psd1" />
-    <None Remove="C:\Users\anton\.nuget\packages\microsoft.powershell.sdk\7.4.10\contentFiles\any\any\runtimes\win\lib\net8.0\Modules\Microsoft.PowerShell.Security\Security.types.ps1xml" />
-    <None Remove="C:\Users\anton\.nuget\packages\microsoft.powershell.sdk\7.4.10\contentFiles\any\any\runtimes\win\lib\net8.0\Modules\Microsoft.PowerShell.Utility\Microsoft.PowerShell.Utility.psd1" />
-    <None Remove="C:\Users\anton\.nuget\packages\microsoft.powershell.sdk\7.4.10\contentFiles\any\any\runtimes\win\lib\net8.0\Modules\Microsoft.WSMan.Management\Microsoft.WSMan.Management.psd1" />
-    <None Remove="C:\Users\anton\.nuget\packages\microsoft.powershell.sdk\7.4.10\contentFiles\any\any\runtimes\win\lib\net8.0\Modules\Microsoft.WSMan.Management\WSMan.format.ps1xml" />
-    <None Remove="C:\Users\anton\.nuget\packages\microsoft.powershell.sdk\7.4.10\contentFiles\any\any\runtimes\win\lib\net8.0\Modules\PSDiagnostics\PSDiagnostics.psd1" />
-    <None Remove="C:\Users\anton\.nuget\packages\microsoft.powershell.sdk\7.4.10\contentFiles\any\any\runtimes\win\lib\net8.0\Modules\PSDiagnostics\PSDiagnostics.psm1" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="FastDtw.CSharp" Version="2.2.0" />
     <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.4.10" />
     <PackageReference Include="System.IO.Ports" Version="9.0.2" />

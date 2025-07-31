@@ -3,41 +3,41 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   release:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
 
-    - name: Restore NuGet packages
-      run: dotnet restore Swipe_Desktop/Swipe_Desktop.sln
+      - name: Disable global NuGet cache
+        run: dotnet nuget locals all --clear
 
-    - name: Build WPF application
-      run: dotnet build Swipe_Desktop/Swipe_Desktop.sln --configuration Release
+      - name: Use locked NuGet config
+        run: dotnet restore Swipe_Desktop/Swipe_Desktop.sln --configfile Swipe_Desktop/nuget.config
 
-    - name: Publish the app
-      run: dotnet publish Swipe_Desktop/Swipe_Application/Swipe_Application.csproj -c Release -o ./publish
+      - name: Restore NuGet packages
+        run: dotnet restore Swipe_Desktop/Swipe_Desktop.sln
 
-    - name: Remove PDB files
-      run: Remove-Item -Path ./publish/*.pdb -Force
+      - name: Build WPF application
+        run: dotnet build Swipe_Desktop/Swipe_Desktop.sln --configuration Release
 
-    - name: Zip the publish folder
-      run: Compress-Archive -Path ./publish/* -DestinationPath ./Swipe.zip
+      - name: Publish the app
+        run: dotnet publish Swipe_Desktop/Swipe_Application/Swipe_Application.csproj -c Release -o ./publish
 
-    - name: Create Release
-      uses: softprops/action-gh-release@v2
-      with:
-        name: Release ${{ github.ref_name }}
-        tag_name: ${{ github.ref_name }}
-        files: ./Swipe.zip
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          files: ./publish/Swipe_Application.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
