@@ -1,7 +1,9 @@
 # Swipe
 ## Summary
 A macro tool that is using some custom hardware, also works with keyboard.
-<img width="1010" height="761" alt="image" src="https://github.com/user-attachments/assets/6cd289c7-72c9-47ac-880f-2830d59fbe71" />
+Btw the name Swipe comes from the movements when using the band to activate functions.
+
+<img width="505" height="380" alt="image" src="https://github.com/user-attachments/assets/6cd289c7-72c9-47ac-880f-2830d59fbe71" />
 
 
 ## Gesture
