@@ -98,15 +98,20 @@ public partial class SettingsView : System.Windows.Controls.UserControl
         }
 
         _settingsData.AutoStart = true;
-        RegistryKey? rk = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
-        if (rk != null)
+
+        string exePath = System.Reflection.Assembly.GetEntryAssembly()!.Location;
+
+        using (RegistryKey rk = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true))
         {
-            rk?.SetValue("Swipe", $"\"{Assembly.GetExecutingAssembly().Location}\"");
-            _logger?.Log("[USER] Added to autostart");
-        }
-        else
-        {
-            _logger?.Log("[ERROR] Could not open registry path: SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
+            if (rk != null)
+            {
+                rk.SetValue("Swipe", $"\"{exePath}\"");
+                _logger?.Log($"[USER] Added to autostart: {exePath}");
+            }
+            else
+            {
+                _logger?.Log("[ERROR] Could not open registry path: SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
+            }
         }
 
         Save();
@@ -120,18 +125,21 @@ public partial class SettingsView : System.Windows.Controls.UserControl
         }
 
         _settingsData.AutoStart = false;
-        RegistryKey? rk = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
-        if (rk != null)
+
+        using (RegistryKey rk = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true))
         {
-            if (rk?.GetValue("Swipe") != null)
+            if (rk != null)
             {
-                _logger?.Log("[USER] Removed from autostart");
-                rk?.DeleteValue("Swipe");
+                if (rk.GetValue("Swipe") != null)
+                {
+                    rk.DeleteValue("Swipe");
+                    _logger?.Log("[USER] Removed from autostart");
+                }
             }
-        }
-        else
-        {
-            _logger?.Log("[ERROR] Could not open registry path: SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
+            else
+            {
+                _logger?.Log("[ERROR] Could not open registry path: SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
+            }
         }
 
         Save();

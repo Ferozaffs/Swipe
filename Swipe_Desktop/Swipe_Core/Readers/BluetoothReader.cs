@@ -61,9 +61,16 @@ public class BluetoothReader : IDataReader
         {
             if (device.ConnectionStatus == BluetoothConnectionStatus.Disconnected)
             {
-                await device.GetGattServicesAsync();
-                Debug.WriteLine("Reconnecting...");
-                connectionTries++;
+                try
+                {
+                    await device.GetGattServicesAsync();
+                    Debug.WriteLine("Reconnecting...");
+                    connectionTries++;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Reconnection failed: {ex.Message}");
+                }
             }
 
             while (device.ConnectionStatus == BluetoothConnectionStatus.Connected && _stopped == false)
@@ -72,15 +79,16 @@ public class BluetoothReader : IDataReader
                 connectionTries = 0;
                 OnConnection?.Invoke(true);
                 await ReadDeviceData(device);
+                await Task.Delay(100);
             }
 
-            Thread.Sleep(connectionInterval);
             if (connectionTries >= 3)
             {
                 Debug.WriteLine("Exceeded connection attempts...reducing reconnection interval");
                 connectionInterval = 10000;
                 OnConnection?.Invoke(false);
             }
+            await Task.Delay(connectionInterval);
         }
     }
 
